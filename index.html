@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Command Center">
@@ -953,18 +954,29 @@ function chicagoPlus(n) {
 /* Dated building invites only. Standing brunch is generated. Golf stays off. */
 const SIXG_INVITES = [];
 
+function chicagoMinutes() {
+  const p = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(new Date());
+  const g = t => +p.find(x => x.type === t).value;
+  return g("hour") * 60 + g("minute");
+}
+
 function sixGWeek() {
   const events = [];
+  const nowMin = chicagoMinutes();
   for (let i = 0; i <= 7; i++) {
     const day = chicagoPlus(i);
-    if (day.wd === "Sun") {
+    const brunchEnded = i === 0 && day.wd === "Sun" && nowMin >= 13 * 60;
+    if (day.wd === "Sun" && !brunchEnded) {
       events.push({
         key: day.key + "-brunch",
         when: day.long,
         time: "11 to 1",
         title: "Brunch Club",
         where: "Piano Lounge",
-        note: "Standing. Same hours every Sunday."
+        standing: true,
+        note: "Same hours every Sunday."
       });
     }
     SIXG_INVITES.forEach(inv => {
@@ -991,7 +1003,7 @@ function sixGView() {
   const weekRows = week.length
     ? week.map(e => `<div class="weekrow">
         <div class="when">${e.when}<span>${e.time}</span></div>
-        <div class="what"><strong>${e.title}</strong>${e.where}<span class="sub">${e.note || ""}</span></div>
+        <div class="what"><strong>${e.title}</strong>${e.where}${e.standing ? ` <span class="tag t-ok standing">Standing</span>` : ""}<span class="sub">${e.note || ""}</span></div>
       </div>`).join("")
     : `<div class="zero">Quiet week at the building.<br>Sunday brunch will return when the next Sunday lands in this window.</div>`;
 
