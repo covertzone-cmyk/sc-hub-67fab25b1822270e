@@ -831,8 +831,13 @@ async function sendCarlitosTask(opts) {
 }
 
 /* item-level board state: done, snoozed, dropped */
-function itemState(id) { return DB.get("item_" + id, null); }
-function setItemState(id, v) { DB.set("item_" + id, v); pushState(); }
+function itemKey(itemOrId) {
+  if (itemOrId && typeof itemOrId === "object") return itemOrId.stateId || itemOrId.id;
+  const item = ACT_INDEX[itemOrId];
+  return (item && item.stateId) || itemOrId;
+}
+function itemState(id) { return DB.get("item_" + itemKey(id), null); }
+function setItemState(id, v) { DB.set("item_" + itemKey(id), v); pushState(); }
 
 /* ---------- dates, always America/Chicago ---------- */
 function todayKey() {
@@ -965,6 +970,7 @@ const BIZ = {
   siren: null,
   then: [
     { id: "keri-thanks",
+      stateId: "keri-thanks-sent",
       html: "<span class='big'>Sent from SC@ today 8:00 AM CT. Thanked her for Ryan, asked coffee/lunch.</span>",
       act: [
         { k: "done", label: "Done" },
@@ -1058,7 +1064,7 @@ function bizSiren() {
 /* renders a list whose entries carry action buttons */
 function ulActs(arr) {
   const live = arr.filter(i => {
-    const s = itemState(i.id);
+    const s = itemState(i);
     if (!s) return true;
     if (s.k === "drop" || s.k === "done") return false;
     if (s.k === "snooze") return s.until <= todayKey();
@@ -1077,7 +1083,7 @@ function ulActs(arr) {
   }).join("") + "</ul>";
 }
 function bizThen() {
-  const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i.id) || itemState(i.id).k === "snooze" && itemState(i.id).until <= todayKey()).length;
+  const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i) || itemState(i).k === "snooze" && itemState(i).until <= todayKey()).length;
   return card("Then these", ulActs(BIZ.then),
     { wide: true, cls: "quiet", right: hidden > 0 ? `${hidden} cleared` : "" });
 }
