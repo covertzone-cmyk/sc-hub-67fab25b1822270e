@@ -138,6 +138,9 @@ a{color:var(--berry)}
 .asknote.show{margin-top:8px}
 .asknote.bad{color:var(--berry)}
 .asknote.ok{color:var(--green)}
+.hudsonask{margin:10px 0 4px;max-width:540px}
+.hudsonask .askrow button.quiet{color:var(--muted)}
+.hudsonask .askrow button.quiet:hover{color:var(--ink)}
 
 .grid{display:flex;flex-direction:column;gap:0;max-width:860px;align-items:stretch}
 .stage{padding:36px 0 8px}
@@ -547,13 +550,72 @@ function askNote(msg, kind) {
   n.textContent = msg || "";
   n.className = "asknote" + (msg ? " show" : "") + (kind === "bad" ? " bad" : kind === "ok" ? " ok" : "");
 }
+function hudsonCardText(id) {
+  const ctx = HUDSON_CTX[id] || { title: "", text: "" };
+  const title = (ctx.title || "").trim();
+  const text = (ctx.text || "").trim();
+  if (!title) return text;
+  if (!text || text === title || text.indexOf(title) === 0) return text || title;
+  return title + ". " + text;
+}
+function closeHudsonAsk() {
+  const box = view.querySelector("#hudsonask");
+  if (box) box.remove();
+}
+function openHudsonAsk(btn) {
+  const id = btn.dataset.hudson;
+  const existing = view.querySelector("#hudsonask");
+  if (existing && existing.dataset.for === id) {
+    existing.remove();
+    return;
+  }
+  if (existing) existing.remove();
+  const box = document.createElement("div");
+  box.id = "hudsonask";
+  box.className = "hudsonask";
+  box.dataset.for = id;
+  box.innerHTML =
+    `<div class="askrow">` +
+      `<input id="hudsonaskin" type="text" placeholder="What do you want to know about this?" autocomplete="off">` +
+      `<button type="button" id="hudsonasksend">Send</button>` +
+      `<button type="button" id="hudsonaskcancel" class="quiet">Cancel</button>` +
+    `</div>`;
+  const flashEl = view.querySelector("#flash-" + id);
+  const acts = btn.closest(".acts");
+  if (flashEl) flashEl.insertAdjacentElement("beforebegin", box);
+  else if (acts) acts.insertAdjacentElement("afterend", box);
+  else btn.insertAdjacentElement("afterend", box);
+  const inp = box.querySelector("#hudsonaskin");
+  const send = () => {
+    const text = inp.value.trim();
+    if (!text) {
+      flash(id, "Type a question first.", true);
+      return;
+    }
+    askHudson({
+      text,
+      source: "card",
+      card: hudsonCardText(id),
+      flashId: id
+    }).then(queued => {
+      if (queued) {
+        inp.value = "";
+        closeHudsonAsk();
+      }
+    });
+  };
+  box.querySelector("#hudsonasksend").onclick = send;
+  box.querySelector("#hudsonaskcancel").onclick = closeHudsonAsk;
+  inp.onkeydown = e => { if (e.key === "Enter") send(); };
+  inp.focus();
+}
 async function askHudson(opts) {
   const text = (opts.text || "").trim();
   const card = opts.card || "";
   const flashId = opts.flashId || "";
-  if (!text && !card) return;
+  if (!text) return false;
   const payload = {
-    text: text || "Pull this up",
+    text,
     source: opts.source || "bar",
     card,
     mode,
@@ -567,7 +629,7 @@ async function askHudson(opts) {
   };
   if (!HUDSON.on) {
     tell("Hudson is not connected yet. Saved on this device.", "bad");
-    return;
+    return false;
   }
   tell("Sending to Hudson...");
   const body = JSON.stringify(Object.assign({ senderKey: HUDSON.key }, payload));
@@ -589,8 +651,12 @@ async function askHudson(opts) {
   } catch (e) {
     queued = false;
   }
-  if (queued) tell("Sent to Hudson.", "ok");
-  else tell("Could not reach Hudson. Saved on this device.", "bad");
+  if (queued) {
+    tell("Sent to Hudson.", "ok");
+    return true;
+  }
+  tell("Could not reach Hudson. Saved on this device.", "bad");
+  return false;
 }
 
 /* item-level board state: done, snoozed, dropped */
@@ -1399,20 +1465,7 @@ function wire() {
     render();
   };
 
-  view.querySelectorAll("[data-hudson]").forEach(b => b.onclick = () => {
-    const ctx = HUDSON_CTX[b.dataset.hudson] || { title: "", text: "" };
-    const title = (ctx.title || "").trim();
-    const text = (ctx.text || "").trim();
-    const card = !title ? text
-      : (!text || text === title || text.indexOf(title) === 0) ? (text || title)
-      : title + ". " + text;
-    askHudson({
-      text: "Pull this up",
-      source: "card",
-      card,
-      flashId: b.dataset.hudson
-    });
-  });
+  view.querySelectorAll("[data-hudson]").forEach(b => b.onclick = () => openHudsonAsk(b));
 
   /* collapsible cards on phone */
   view.querySelectorAll(".collapsible h2").forEach(h =>
