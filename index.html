@@ -74,17 +74,33 @@ a{color:var(--berry)}
 
 .sidefoot{margin-top:auto;padding:16px 12px 0;border-top:1px solid rgba(255,255,255,.1);
   font-size:11.5px;color:rgba(255,255,255,.38);line-height:1.55}
+.sidefoot + .sidefoot,.sidefoot .footline + .footline{margin-top:8px}
 
 /* ---------- MAIN ---------- */
 .main{flex:1;min-width:0;padding:36px 40px 72px}
 .greet{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
-  padding-bottom:22px;margin-bottom:28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  padding-bottom:18px;margin-bottom:0;flex-wrap:wrap}
 .greet h1{margin:0;font-size:28px;font-weight:300;letter-spacing:-.01em}
 .greet h1 b{font-weight:800}
 .greet .date{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:.01em}
 .brief{background:var(--berry);color:#fff;border:0;border-radius:11px;padding:12px 22px;
   font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
 .brief:hover{background:var(--berry-deep)}
+
+.askbar{padding-bottom:22px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.askbar .k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px}
+.askrow{display:flex;gap:9px}
+.askrow input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;
+  padding:13px 15px;font-family:inherit;font-size:15.5px;background:#fff;color:var(--ink)}
+.askrow input:focus{outline:none;border-color:var(--berry)}
+.askrow button{border:0;background:var(--berry);color:#fff;border-radius:10px;padding:0 22px;
+  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto}
+.askrow button:hover{background:var(--berry-deep)}
+.asknote{font-size:12.5px;color:var(--muted);margin-top:0;min-height:0;line-height:1.45}
+.asknote.show{margin-top:9px}
+.asknote.bad{color:var(--berry)}
+.asknote.ok{color:var(--green)}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;align-items:start}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px}
@@ -251,9 +267,10 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
   .app{display:block}
   .sidebar{display:none}
   .main{padding:18px 16px 104px}
-  .greet{padding-top:8px;margin-bottom:20px}
+  .greet{padding-top:8px;margin-bottom:0}
   .greet h1{font-size:22px}
   .brief{display:none}
+  .askbar{margin-bottom:20px;padding-bottom:18px}
   .grid{grid-template-columns:1fr;gap:16px}
   .card{padding:18px 18px}
   .siren{padding:20px 18px}
@@ -315,6 +332,14 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
       </div>
       <button class="brief" id="briefbtn">Daily Briefing</button>
     </div>
+    <div class="askbar">
+      <div class="k">Ask Hudson</div>
+      <div class="askrow">
+        <input id="askin" placeholder="Pull up the Vilcek email" autocomplete="off">
+        <button type="button" id="askbtn">Ask</button>
+      </div>
+      <div class="asknote" id="asknote"></div>
+    </div>
     <div class="grid" id="view"></div>
   </main>
 </div>
@@ -356,6 +381,31 @@ const CFG = {
   get secret() { return DB.get("cfg_secret", ""); },
   get on()     { return !!(this.url && this.secret); }
 };
+/* Hudson is a separate webhook. These keys must never reuse cfg_url / cfg_secret. */
+const HUDSON = {
+  urlKey: "hudson_webhook_url",
+  keyKey: "hudson_sender_key",
+  asksKey: "hudson_asks",
+  get url() { try { return localStorage.getItem(this.urlKey) || ""; } catch (e) { return ""; } },
+  get key() { try { return localStorage.getItem(this.keyKey) || ""; } catch (e) { return ""; } },
+  get on()  { return !!(this.url && this.key); },
+  set(url, key) {
+    try {
+      if (url) localStorage.setItem(this.urlKey, url); else localStorage.removeItem(this.urlKey);
+      if (key) localStorage.setItem(this.keyKey, key); else localStorage.removeItem(this.keyKey);
+    } catch (e) {}
+  },
+  clear() { this.set("", ""); },
+  loadAsks() {
+    try { return JSON.parse(localStorage.getItem(this.asksKey) || "[]"); } catch (e) { return []; }
+  },
+  saveAsk(entry) {
+    const asks = this.loadAsks();
+    asks.unshift(entry);
+    try { localStorage.setItem(this.asksKey, JSON.stringify(asks.slice(0, 40))); } catch (e) {}
+  }
+};
+const HUDSON_CTX = {};
 let syncing = false;
 
 async function relay(payload) {
@@ -388,6 +438,61 @@ async function pullState() {
     }
   } catch (e) {}
   return false;
+}
+
+function plainText(html) {
+  const d = document.createElement("div");
+  d.innerHTML = html || "";
+  return (d.textContent || "").replace(/\s+/g, " ").trim();
+}
+function rememberHudson(id, title, text) {
+  HUDSON_CTX[id] = { title: title || "", text: plainText(text || "") };
+}
+function hudsonAct(id, title, text) {
+  rememberHudson(id, title, text);
+  return `<div class="acts"><button type="button" class="act" data-hudson="${id}">Ask Hudson</button></div>
+    <div class="flash" id="flash-${id}"></div>`;
+}
+function askNote(msg, kind) {
+  const n = el("#asknote");
+  if (!n) return;
+  n.textContent = msg || "";
+  n.className = "asknote" + (msg ? " show" : "") + (kind === "bad" ? " bad" : kind === "ok" ? " ok" : "");
+}
+async function askHudson(opts) {
+  const text = (opts.text || "").trim();
+  const card = opts.card || "";
+  const flashId = opts.flashId || "";
+  if (!text && !card) return;
+  const payload = {
+    text: text || "Pull this up",
+    source: opts.source || "bar",
+    card,
+    mode,
+    page,
+    at: new Date().toISOString()
+  };
+  HUDSON.saveAsk(payload);
+  const tell = (msg, kind) => {
+    askNote(msg, kind);
+    if (flashId) flash(flashId, msg, kind === "bad");
+  };
+  if (!HUDSON.on) {
+    tell("Hudson is not connected yet. Saved on this device.", "bad");
+    return;
+  }
+  tell("Sending to Hudson...");
+  try {
+    const r = await fetch(HUDSON.url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(Object.assign({ senderKey: HUDSON.key }, payload))
+    });
+    if (r.ok) tell("Sent to Hudson.", "ok");
+    else tell("Hudson did not accept that. Saved on this device.", "bad");
+  } catch (e) {
+    tell("Could not reach Hudson. Saved on this device.", "bad");
+  }
 }
 
 /* item-level board state: done, snoozed, dropped */
@@ -695,8 +800,10 @@ function bizSiren() {
     return card("Vilcek referral", `<div class="zero" style="color:#fff">Handled. Good.</div>`,
       { wide: true, cls: "siren" });
   }
+  rememberHudson(SIREN_ITEM.id, BIZ.siren.title, BIZ.siren.items.join(" "));
   const acts = SIREN_ITEM.act.map((a, n) =>
-    `<button class="act" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("");
+    `<button class="act" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("")
+    + `<button type="button" class="act" data-hudson="${SIREN_ITEM.id}">Ask Hudson</button>`;
   return card(BIZ.siren.title,
     ul(BIZ.siren.items) + `<div class="acts">${acts}</div><div class="flash" id="flash-${SIREN_ITEM.id}"></div>`,
     { wide: true, cls: "siren" });
@@ -712,9 +819,11 @@ function ulActs(arr) {
   });
   if (!live.length) return `<div class="zero">All of these are handled.<br>Rare. Enjoy it.</div>`;
   return "<ul>" + live.map(i => {
+    rememberHudson(i.id, "Then these", i.html);
     const acts = (i.act || []).map((a, n) =>
       `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}"
-        data-act="${i.id}" data-n="${n}">${a.label}</button>`).join("");
+        data-act="${i.id}" data-n="${n}">${a.label}</button>`).join("")
+      + `<button type="button" class="act" data-hudson="${i.id}">Ask Hudson</button>`;
     return `<li>${i.html}
       <div class="acts">${acts}</div>
       <div class="flash" id="flash-${i.id}"></div></li>`;
@@ -736,19 +845,38 @@ function connectCard() {
      <div class="flash" id="flash-cfg"></div>`,
     { wide: true, cls: "connect", right: "not connected" });
 }
+function hudsonConnectCard(kind) {
+  if (kind === "needed" && HUDSON.on) return "";
+  if (kind === "connected" && !HUDSON.on) return "";
+  if (HUDSON.on) {
+    return card("Ask Hudson",
+      `<p style="margin:0 0 13px">Connected on this device. Asks from the bar and from cards go to the Hudson webhook, not the Apps Script relay.</p>
+       <button type="button" class="act quiet" id="hudsonclear">Disconnect Hudson</button>
+       <div class="flash" id="flash-hudson"></div>`,
+      { wide: true, cls: "connect", right: "connected" });
+  }
+  return card("Ask Hudson",
+    `<p style="margin:0 0 13px">Hudson is a separate webhook from the Apps Script buttons. Paste the webhook URL and the sender key. Both stay on this device. Until then, asks are saved here and not sent.</p>
+     <input id="hudsonurl" placeholder="Hudson webhook URL" autocomplete="off">
+     <input id="hudsonkey" placeholder="Hudson sender key" autocomplete="off">
+     <button type="button" class="act" id="hudsonsave">Connect Hudson</button>
+     <div class="flash" id="flash-hudson"></div>`,
+    { wide: true, cls: "connect", right: "not connected" });
+}
 function bizSchedule() {
   const rows = BIZ.schedule.map(r => `<div class="row"><div class="time">${r[0]}</div><div class="what">${r[1]}</div></div>`).join("");
-  return card("Schedule", rows + `<div class="note">${BIZ.scheduleNote}</div>`);
+  const body = rows + `<div class="note">${BIZ.scheduleNote}</div>`;
+  return card("Schedule", body + hudsonAct("schedule", "Schedule", body));
 }
-function bizMoney() { return card("Money", ul(BIZ.money)); }
-function bizWaiting() { return card("Waiting on them", ul(BIZ.waiting)); }
-function bizDrafts() { return card("Drafted, unsent", ul(BIZ.drafts), { right: "SC@ is at 10" }); }
-function bizAged() { return card("Open 5 or more days", ul(BIZ.aged), { wide: true, collapsed: true }); }
-function bizPrep() { return card(BIZ.prep.title, BIZ.prep.html, { wide: true, collapsed: true }); }
-function bizFacts() { return card("Facts from this run", ul(BIZ.facts), { wide: true, collapsed: true }); }
+function bizMoney() { return card("Money", ul(BIZ.money) + hudsonAct("money", "Money", ul(BIZ.money))); }
+function bizWaiting() { return card("Waiting on them", ul(BIZ.waiting) + hudsonAct("waiting", "Waiting on them", ul(BIZ.waiting))); }
+function bizDrafts() { return card("Drafted, unsent", ul(BIZ.drafts) + hudsonAct("drafts", "Drafted, unsent", ul(BIZ.drafts)), { right: "SC@ is at 10" }); }
+function bizAged() { return card("Open 5 or more days", ul(BIZ.aged) + hudsonAct("aged", "Open 5 or more days", ul(BIZ.aged)), { wide: true, collapsed: true }); }
+function bizPrep() { return card(BIZ.prep.title, BIZ.prep.html + hudsonAct("prep", BIZ.prep.title, BIZ.prep.html), { wide: true, collapsed: true }); }
+function bizFacts() { return card("Facts from this run", ul(BIZ.facts) + hudsonAct("facts", "Facts from this run", ul(BIZ.facts)), { wide: true, collapsed: true }); }
 
 const BIZVIEWS = {
-  overview: () => connectCard() + bizSiren() + bizThen() + bizSchedule() + bizMoney() + bizPrep() + bizWaiting() + bizDrafts() + bizAged() + bizFacts(),
+  overview: () => connectCard() + hudsonConnectCard("needed") + bizSiren() + bizThen() + bizSchedule() + bizMoney() + bizPrep() + bizWaiting() + bizDrafts() + bizAged() + bizFacts() + hudsonConnectCard("connected"),
   schedule: () => bizSchedule() + bizPrep(),
   money: () => bizMoney() + bizWaiting(),
   followups: () => bizDrafts() + bizWaiting() + bizThen(),
@@ -862,23 +990,27 @@ function todayView() {
     : `<div class="zero">Nobody owes you anything right now.<br>Enjoy it, it will not last.</div>`;
 
   const p = nowParts();
-  const bizNudge = card("From the business side",
-    `<ul>
+  const bizNudgeHtml = `<ul>
       <li><span class="big">Vilcek referral, 50 hours unread.</span> Ten minutes, highest value thing on either tab.</li>
       <li>Denise Bodman asked about your move timeline Aug 14 and is still waiting, 2 days.</li>
       <li>ACL Weekend One layaway auto charges <strong>tomorrow, Aug 17</strong>.</li>
-    </ul>`, { right: "read only" });
+    </ul>`;
+  const bizNudge = card("From the business side",
+    bizNudgeHtml + hudsonAct("today-biz", "From the business side", bizNudgeHtml), { right: "read only" });
 
-  return card("Top 3", rows + carryNote, { wide: true, right: "Three. Not thirty." })
-    + card("Quick checks", quick)
-    + card("Waiting on", waitRows)
-    + bizNudge
-    + card("Personal, low stakes", `<ul>
+  const personalHtml = `<ul>
         <li><strong>Denise Bodman / Bosque at Waterline</strong> asked Aug 14 whether you and Larry have a move timeline, and attached the two quotes. Unanswered, 2 days.</li>
         <li><strong>Anna May</strong> logo thread from Aug 12 still unread in SC@.</li>
         <li>Austin History Center tour still unscheduled.</li>
         <li>Prescription and glasses, about 34 days.</li>
-      </ul>`);
+      </ul>`;
+
+  return hudsonConnectCard("needed")
+    + card("Top 3", rows + carryNote, { wide: true, right: "Three. Not thirty." })
+    + card("Quick checks", quick)
+    + card("Waiting on", waitRows + hudsonAct("today-wait", "Waiting on", waitRows))
+    + bizNudge
+    + card("Personal, low stakes", personalHtml + hudsonAct("today-personal", "Personal, low stakes", personalHtml));
 }
 
 /* ---------------- PERSONAL: BRAIN DUMP ---------------- */
@@ -989,15 +1121,16 @@ function sixGWeek() {
 function sixGView() {
   const week = sixGWeek();
   const notes = DB.get("sixg_locker", []);
-  const home = card("Home",
-    `<div class="homehero">
+  const homeHtml = `<div class="homehero">
       <div class="homeunit">5316</div>
       <div>
         <div class="homekicker">Residences at 6G</div>
         <div class="homename">Unit 5316</div>
         <p style="margin:0;max-width:46ch">October 3 is held as move-in until they change it. Probably sooner. Nothing to send from here.</p>
       </div>
-    </div>`,
+    </div>`;
+  const home = card("Home",
+    homeHtml + hudsonAct("sixg-home", "Home", "Residences at 6G / Unit 5316. October 3 is held as move-in until they change it."),
     { wide: true });
 
   const weekRows = week.length
@@ -1007,8 +1140,9 @@ function sixGView() {
       </div>`).join("")
     : `<div class="zero">Quiet week at the building.<br>Sunday brunch will return when the next Sunday lands in this window.</div>`;
 
+  const weekBody = weekRows + `<div class="note">Dated building events only, a week out. Sunday brunch is standing.</div>`;
   const weekCard = card("This week at 6G",
-    weekRows + `<div class="note">Dated building events only, a week out. Sunday brunch is standing.</div>`,
+    weekBody + hudsonAct("sixg-week", "This week at 6G", weekBody),
     { wide: true, right: week.length ? `${week.length} this week` : "clear" });
 
   const lockerRows = notes.length
@@ -1023,7 +1157,7 @@ function sixGView() {
     `<div class="dumpbox">
       <input id="lockerin" placeholder="Locker code, hold, or who it is for" autocomplete="off">
       <button id="lockerbtn">Keep</button>
-    </div>` + lockerRows,
+    </div>` + lockerRows + hudsonAct("sixg-locker", "Packages and locker", lockerRows),
     { wide: true, right: notes.length ? `${notes.length} held` : "" });
 
   return home + weekCard + locker;
@@ -1056,10 +1190,21 @@ function renderGreet() {
     : page === "sixg"
       ? " · Residences at 6G, unit 5316"
       : " · Zone " + currentZone().n + ", " + currentZone().name);
-  const link = CFG.on
-    ? `<span class="dot on"></span>Connected. Buttons work and this device is in sync.`
-    : `<span class="dot off"></span>Not connected. Buttons have nowhere to send and nothing syncs between devices yet.`;
-  el("#sidefoot").innerHTML = link;
+  const hudson = HUDSON.on
+    ? `<div class="footline"><span class="dot on"></span>Hudson is connected.</div>`
+    : `<div class="footline"><span class="dot off"></span>Hudson is not connected. Asks stay on this device.</div>`;
+  const buttons = CFG.on
+    ? `<div class="footline"><span class="dot on"></span>Buttons work and this device is in sync.</div>`
+    : `<div class="footline"><span class="dot off"></span>Buttons have nowhere to send and nothing syncs between devices yet.</div>`;
+  el("#sidefoot").innerHTML = hudson + buttons;
+  const askin = el("#askin");
+  if (askin && document.activeElement !== askin) {
+    askin.placeholder = mode === "business"
+      ? "Pull up the Vilcek email"
+      : page === "sixg"
+        ? "Ask about 6G"
+        : "Ask Hudson";
+  }
 }
 function render() {
   const views = mode === "business" ? BIZVIEWS : PERSVIEWS;
@@ -1151,6 +1296,41 @@ function wire() {
       flash("cfg", "No answer. Check the URL ends in /exec, that access is set to Anyone, and that the secret matches.", true);
     }
   };
+
+  /* Hudson webhook, separate from CFG.url / CFG.secret */
+  const hs = view.querySelector("#hudsonsave");
+  if (hs) hs.onclick = () => {
+    const u = (view.querySelector("#hudsonurl") || {}).value;
+    const k = (view.querySelector("#hudsonkey") || {}).value;
+    const url = (u || "").trim();
+    const key = (k || "").trim();
+    if (!url || !key) { flash("hudson", "Both fields, please.", true); return; }
+    HUDSON.set(url, key);
+    flash("hudson", "Hudson is connected on this device.");
+    askNote("Hudson is connected.", "ok");
+    setTimeout(render, 500);
+  };
+  const hc = view.querySelector("#hudsonclear");
+  if (hc) hc.onclick = () => {
+    HUDSON.clear();
+    askNote("Hudson is not connected. Asks stay on this device.", "bad");
+    render();
+  };
+
+  view.querySelectorAll("[data-hudson]").forEach(b => b.onclick = () => {
+    const ctx = HUDSON_CTX[b.dataset.hudson] || { title: "", text: "" };
+    const title = (ctx.title || "").trim();
+    const text = (ctx.text || "").trim();
+    const card = !title ? text
+      : (!text || text === title || text.indexOf(title) === 0) ? (text || title)
+      : title + ". " + text;
+    askHudson({
+      text: "Pull this up",
+      source: "card",
+      card,
+      flashId: b.dataset.hudson
+    });
+  });
 
   /* collapsible cards on phone */
   view.querySelectorAll(".collapsible h2").forEach(h =>
@@ -1298,6 +1478,24 @@ function wire() {
 el("#briefbtn").onclick = () => {
   mode = "business"; page = "overview"; DB.set("mode", mode); DB.set("page_business", page); render();
 };
+
+(function wireAskBar() {
+  const inp = el("#askin");
+  const btn = el("#askbtn");
+  if (!inp || !btn) return;
+  const send = () => {
+    const text = inp.value.trim();
+    if (!text) {
+      askNote("Type an ask first.", "bad");
+      return;
+    }
+    askHudson({ text, source: "bar", card: "" }).then(() => {
+      if (HUDSON.on || text) inp.value = "";
+    });
+  };
+  btn.onclick = send;
+  inp.onkeydown = e => { if (e.key === "Enter") send(); };
+})();
 
 /* carry unfinished Top 3 forward */
 (function carry() {
