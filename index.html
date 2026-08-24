@@ -982,18 +982,16 @@ const BIZ = {
       ] }
   ],
   schedule: [
-    ["Today", "Calendar is empty <span class='tag t-ok'>Clear</span><span class='sub'>No shoots, no calls, no appointments.</span>"]
+    ["Today", "Calendar is empty <span class='tag t-ok'>Clear</span><span class='sub'>No shoots, no calls, no appointments today.</span>"],
+    ["Fri Oct 23", "4:00 PM, Bernadette Ikhena / Stout <span class='tag t-ok'>Booked</span><span class='sub'>Confirmation already sent.</span>"]
   ],
-  scheduleNote: "Clear day. Nothing on the calendar.",
+  scheduleNote: "Clear today. Next booked date is Friday October 23 at 4:00 PM, Bernadette Ikhena / Stout.",
   money: [
     "<span class='tag t-ok'>Paid</span> <strong>LPC / Lauren Soules $2,706.25</strong> via Timeglass on Mercury today. Closes invoice SS-00279.",
     "<strong>800 Brazos ACH.</strong> Kate Rudd's bank details arrived Aug 13. Set it up before September rent.",
     "<span class='tag t-ok'>Cleared</span> Food Corridor $2,922.75 banked Aug 12. Monica Clodius $405.94 paid. Square loan balance $5,457.84."
   ],
   waiting: [
-    { id: "wait-bernadette",
-      html: "<strong>Bernadette Ikhena / Stout</strong> on scheduling. Follow up Aug 14. 2 days.",
-      act: [{ k: "done", label: "Clear it" }] },
     { id: "wait-kurt",
       html: "<strong>Kurt Bonatz</strong> on the Poynton 11 executive Sept 16 proposal. Check in ready Aug 18.",
       act: [{ k: "done", label: "Already handled" }] },
@@ -1024,6 +1022,7 @@ const BIZ = {
     "<strong>Move the Sep 2 eyelash refill</strong> before the Albuquerque trip. <strong>Decide on FastSpring</strong> before the Sep 1 renewal."
   ],
   facts: [
+    "<strong>Bernadette Ikhena / Stout is booked Friday October 23, 2026 at 4:00 PM.</strong> Suzanne already sent the confirmation email.",
     "<strong>No new client inquiries and no website form submissions since Friday.</strong>"
   ]
 };
