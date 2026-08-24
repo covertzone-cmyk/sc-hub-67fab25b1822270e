@@ -506,8 +506,8 @@ const DB = (() => {
    RELAY. Talks to the Apps Script backend. Until it is connected the board
    still works, it just remembers things on this device only.
    ===================================================================== */
-const PIPE_URL = ""; // leave empty string for now, I will fill the /exec URL in a follow-up
-const PIPE_SECRET = ""; // leave empty, I will fill
+const PIPE_URL = "https://script.google.com/macros/s/AKfycbxE7X2vKDFL4ZJrVTJw9Gbz-FLEuouf4aX_bzHvI7h3fUjefZ4uH7ymelV1GXWD3SI9Hg/exec";
+const PIPE_SECRET = "bebd19ba5252391d9c5c86eb4ce20fca3f9e974634089a0a";
 const CFG = {
   get url()    { return PIPE_URL || DB.get("cfg_url", ""); },
   get secret() { return PIPE_SECRET || DB.get("cfg_secret", ""); },
