@@ -344,8 +344,9 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
   .grid,.stage,.after,.utility{max-width:none}
   .quietpair{grid-template-columns:1fr}
   .card{padding:16px 0}
-  .card.focus{padding:6px 0 22px}
-  .card.focus h2{font-size:22px}
+  .card.focus{padding:6px 0 18px}
+  .card.focus h2{font-size:24px}
+  .askrow input{font-size:16px}
   .siren{padding:6px 0 22px}
   .homehero{grid-template-columns:1fr}
   .homeunit{width:52px;height:52px;font-size:13px}
@@ -924,14 +925,7 @@ function bizThen() {
 }
 
 function connectCard() {
-  if (CFG.on) return "";
-  return card("Connect the buttons",
-    `<p style="margin:0 0 13px">The buttons below are wired but have nowhere to send yet. Paste the web app URL from <code>board-backend.gs</code> and the secret you set in it. Both stay on this device.</p>
-     <input id="cfgurl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
-     <input id="cfgsecret" placeholder="Your shared secret" autocomplete="off">
-     <button class="act" id="cfgsave">Connect and test</button>
-     <div class="flash" id="flash-cfg"></div>`,
-    { wide: true, cls: "connect", right: "not connected" });
+  return "";
 }
 function hudsonConnectCard(kind) {
   if (kind === "needed" && HUDSON.on) return "";
@@ -970,7 +964,7 @@ const BIZVIEWS = {
   overview: () =>
     `<div class="stage">${bizSiren()}</div>` +
     `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizPrep()}${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>` +
-    utilityBlock(connectCard() + hudsonConnectCard("needed") + hudsonConnectCard("connected")),
+    utilityBlock(hudsonConnectCard("needed") + hudsonConnectCard("connected")),
   schedule: () => `<div class="after">${bizSchedule()}${bizPrep()}</div>`,
   money: () => `<div class="after">${bizMoney()}${bizWaiting()}</div>`,
   followups: () => `<div class="after">${bizDrafts()}${bizWaiting()}${bizThen()}</div>`,
@@ -1291,10 +1285,7 @@ function renderGreet() {
   const hudson = HUDSON.on
     ? `<div class="footline"><span class="dot on"></span>Hudson is connected.</div>`
     : `<div class="footline"><span class="dot off"></span>Hudson is not connected. Asks stay on this device.</div>`;
-  const buttons = CFG.on
-    ? `<div class="footline"><span class="dot on"></span>Buttons work and this device is in sync.</div>`
-    : `<div class="footline"><span class="dot off"></span>Buttons have nowhere to send and nothing syncs between devices yet.</div>`;
-  el("#sidefoot").innerHTML = hudson + buttons;
+  el("#sidefoot").innerHTML = hudson;
   const askin = el("#askin");
   if (askin && document.activeElement !== askin) {
     askin.placeholder = mode === "business"
@@ -1353,24 +1344,7 @@ async function doAction(itemId, n) {
     render(); return;
   }
 
-  if (!CFG.on) { flash(itemId, "Not connected yet. Fill in the gold card at the top.", true); return; }
-
-  const btns = view.querySelectorAll(`[data-act="${itemId}"]`);
-  btns.forEach(b => b.setAttribute("disabled", ""));
-  flash(itemId, "Sending...");
-
-  const res = await relay({
-    op: "action", kind: a.k, itemId, label: a.label,
-    to: a.to, subject: a.subject, text: a.text, title: a.title, notes: a.notes
-  });
-
-  btns.forEach(b => b.removeAttribute("disabled"));
-  if (res.ok) {
-    flash(itemId, res.message || "Done.");
-    if (a.k === "draft" || a.k === "note") setItemState(itemId, { k: "sent", at: todayKey(), what: a.label });
-  } else {
-    flash(itemId, "Did not go through: " + (res.error || "unknown"), true);
-  }
+  flash(itemId, "This stays on the card. Nothing was sent.");
 }
 
 let timerInt = null, tleft = 120;
