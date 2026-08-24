@@ -676,7 +676,6 @@ async function askHudson(opts) {
   const flashId = opts.flashId || "";
   if (!text) return false;
   const payload = {
-    senderKey: HUDSON.key,
     text,
     source: opts.source || "bar",
     card,
@@ -695,32 +694,32 @@ async function askHudson(opts) {
     return false;
   }
   tell("Sending to Hudson...");
-  const dest = HUDSON.url + (HUDSON.url.indexOf("?") >= 0 ? "&" : "?") + "senderKey=" + encodeURIComponent(HUDSON.key);
-  const body = JSON.stringify(payload);
-  let queued = false;
+  const RELAY = "https://sc-hudson-relay.vercel.app/api/hudson";
   try {
-    if (typeof navigator.sendBeacon === "function") {
-      queued = navigator.sendBeacon(dest, new Blob([body], { type: "text/plain;charset=utf-8" }));
+    const r = await fetch(RELAY, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        webhook: HUDSON.url,
+        key: HUDSON.key,
+        text: payload.text,
+        source: payload.source,
+        card: payload.card,
+        mode: payload.mode,
+        page: payload.page,
+        at: payload.at
+      })
+    });
+    if (r.ok) {
+      tell("Sent. I'll answer in Hudson.", "ok");
+      return true;
     }
-    if (!queued) {
-      await fetch(dest, {
-        method: "POST",
-        mode: "no-cors",
-        keepalive: true,
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body
-      });
-      queued = true;
-    }
+    tell("Hudson did not accept that. Saved on this device.", "bad");
+    return false;
   } catch (e) {
-    queued = false;
+    tell("Could not reach Hudson. Saved on this device.", "bad");
+    return false;
   }
-  if (queued) {
-    tell("Sent. I'll answer in Hudson.", "ok");
-    return true;
-  }
-  tell("Could not reach Hudson. Saved on this device.", "bad");
-  return false;
 }
 
 /* item-level board state: done, snoozed, dropped */
