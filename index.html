@@ -522,6 +522,7 @@ const HUDSON = {
     try { localStorage.setItem(this.asksKey, JSON.stringify(asks.slice(0, 40))); } catch (e) {}
   }
 };
+const HUDSON_RELAY = "https://sc-hudson-relay.vercel.app/api/hudson";
 const HUDSON_CTX = {};
 let syncing = false;
 
@@ -569,6 +570,10 @@ function hudsonAct(id, title, text) {
   rememberHudson(id, title, text);
   return `<div class="acts"><button type="button" class="act" data-hudson="${id}">Ask Hudson</button></div>
     <div class="flash" id="flash-${id}"></div>`;
+}
+function taskReplyActs(id) {
+  return `<button type="button" class="act quiet" data-carlitos="${id}">Need a change</button>` +
+    `<button type="button" class="act quiet" data-hudson="${id}">Ask Hudson</button>`;
 }
 function askNote(msg, kind) {
   const n = el("#asknote");
@@ -627,6 +632,7 @@ function openHudsonAsk(btn) {
     return;
   }
   if (existing) existing.remove();
+  closeCarlitosAsk();
   const host = hudsonAskHost(btn, id);
   const box = document.createElement("div");
   box.id = "hudsonask";
@@ -694,9 +700,8 @@ async function askHudson(opts) {
     return false;
   }
   tell("Sending to Hudson...");
-  const RELAY = "https://sc-hudson-relay.vercel.app/api/hudson";
   try {
-    const r = await fetch(RELAY, {
+    const r = await fetch(HUDSON_RELAY, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
@@ -718,6 +723,109 @@ async function askHudson(opts) {
     return false;
   } catch (e) {
     tell("Could not reach Hudson. Saved on this device.", "bad");
+    return false;
+  }
+}
+
+function closeCarlitosAsk() {
+  const box = view.querySelector("#carlitosask");
+  if (box) box.remove();
+}
+function carlitosAskNote(msg, kind) {
+  const n = view.querySelector("#carlitosasknote");
+  if (!n) return;
+  n.textContent = msg || "";
+  n.className = "hudsonask-note" + (msg ? " show" : "") + (kind === "bad" ? " bad" : kind === "ok" ? " ok" : "");
+}
+function openCarlitosAsk(btn) {
+  const id = btn.dataset.carlitos;
+  const existing = view.querySelector("#carlitosask");
+  if (existing && existing.dataset.for === id) {
+    existing.remove();
+    return;
+  }
+  if (existing) existing.remove();
+  closeHudsonAsk();
+  const host = hudsonAskHost(btn, id);
+  const box = document.createElement("div");
+  box.id = "carlitosask";
+  box.className = "hudsonask";
+  box.dataset.for = id;
+  box.innerHTML =
+    `<div class="hudsonask-k">Tell Carlitos</div>` +
+    `<div class="hudsonask-row">` +
+      `<input id="carlitosaskin" type="text" placeholder="What should change?" autocomplete="off">` +
+      `<button type="button" class="act" id="carlitosasksend">Send</button>` +
+      `<button type="button" class="act quiet" id="carlitosaskcancel">Cancel</button>` +
+    `</div>` +
+    `<div class="hudsonask-note" id="carlitosasknote"></div>`;
+  if (host) host.appendChild(box);
+  else btn.insertAdjacentElement("afterend", box);
+  const inp = box.querySelector("#carlitosaskin");
+  const send = () => {
+    const text = inp.value.trim();
+    if (!text) {
+      carlitosAskNote("Type a note first.", "bad");
+      return;
+    }
+    carlitosAskNote("");
+    sendCarlitosTask({
+      text,
+      action: "change",
+      itemId: id,
+      card: hudsonCardText(id)
+    }).then(queued => {
+      if (queued) {
+        closeCarlitosAsk();
+        rowHudsonNote(id, host, "Sent to Carlitos.", false);
+      } else if (!HUDSON.on) {
+        carlitosAskNote("Hudson is not connected on this device.", "bad");
+      } else {
+        carlitosAskNote("Could not send. Saved on this device.", "bad");
+      }
+    });
+  };
+  box.querySelector("#carlitosasksend").onclick = send;
+  box.querySelector("#carlitosaskcancel").onclick = closeCarlitosAsk;
+  inp.onkeydown = e => { if (e.key === "Enter") send(); };
+  inp.focus();
+}
+async function sendCarlitosTask(opts) {
+  const text = (opts.text || "").trim();
+  const itemId = opts.itemId || "";
+  const card = opts.card || hudsonCardText(itemId);
+  if (!text) return false;
+  const payload = {
+    text,
+    source: "carlitos-task",
+    action: opts.action || "",
+    card,
+    itemId,
+    mode,
+    page,
+    at: new Date().toISOString()
+  };
+  HUDSON.saveAsk(payload);
+  if (!HUDSON.on) return false;
+  try {
+    const r = await fetch(HUDSON_RELAY, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        webhook: HUDSON.url,
+        key: HUDSON.key,
+        text: payload.text,
+        source: payload.source,
+        action: payload.action,
+        card: payload.card,
+        itemId: payload.itemId,
+        mode: payload.mode,
+        page: payload.page,
+        at: payload.at
+      })
+    });
+    return r.ok;
+  } catch (e) {
     return false;
   }
 }
@@ -1009,7 +1117,7 @@ function bizSiren() {
   rememberHudson(SIREN_ITEM.id, BIZ.siren.title, BIZ.siren.items.join(" "));
   const acts = SIREN_ITEM.act.map((a, n) =>
     `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("")
-    + `<button type="button" class="act quiet" data-hudson="${SIREN_ITEM.id}">Ask Hudson</button>`;
+    + taskReplyActs(SIREN_ITEM.id);
   return card(BIZ.siren.title,
     ul(BIZ.siren.items) + `<div class="acts">${acts}</div><div class="flash" id="flash-${SIREN_ITEM.id}"></div>`,
     { wide: true, cls: "focus", kicker: "Do this now" });
@@ -1029,7 +1137,7 @@ function ulActs(arr) {
     const acts = (i.act || []).map((a, n) =>
       `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}"
         data-act="${i.id}" data-n="${n}">${a.label}</button>`).join("")
-      + `<button type="button" class="act quiet" data-hudson="${i.id}">Ask Hudson</button>`;
+      + taskReplyActs(i.id);
     return `<li>${i.html}
       <div class="acts">${acts}</div>
       <div class="flash" id="flash-${i.id}"></div></li>`;
@@ -1452,7 +1560,18 @@ async function doAction(itemId, n) {
   const a = item.act[n];
 
   /* local-only verbs resolve instantly, no round trip needed */
-  if (a.k === "done")   { setItemState(itemId, { k: "done", at: todayKey() }); render(); return; }
+  if (a.k === "done") {
+    sendCarlitosTask({
+      text: "Marked complete.",
+      action: "done",
+      itemId,
+      card: hudsonCardText(itemId)
+    });
+    if (!HUDSON.on) askNote("Hudson is not connected on this device.", "bad");
+    setItemState(itemId, { k: "done", at: todayKey() });
+    render();
+    return;
+  }
   if (a.k === "drop")   { setItemState(itemId, { k: "drop", at: todayKey() }); render(); return; }
   if (a.k === "snooze") {
     const t = new Date(); t.setDate(t.getDate() + 1);
@@ -1505,6 +1624,7 @@ function wire() {
     render();
   };
 
+  view.querySelectorAll("[data-carlitos]").forEach(b => b.onclick = () => openCarlitosAsk(b));
   view.querySelectorAll("[data-hudson]").forEach(b => b.onclick = () => openHudsonAsk(b));
 
   /* collapsible cards on phone */
