@@ -506,67 +506,26 @@ const DB = (() => {
    RELAY. Talks to the Apps Script backend. Until it is connected the board
    still works, it just remembers things on this device only.
    ===================================================================== */
+const PIPE_URL = "https://script.google.com/macros/s/AKfycbxE7X2vKDFL4ZJrVTJw9Gbz-FLEuouf4aX_bzHvI7h3fUjefZ4uH7ymelV1GXWD3SI9Hg/exec";
+const PIPE_SECRET = "bebd19ba5252391d9c5c86eb4ce20fca3f9e974634089a0a";
 const CFG = {
-  get url()    { return DB.get("cfg_url", ""); },
-  get secret() { return DB.get("cfg_secret", ""); },
+  get url()    { return PIPE_URL || DB.get("cfg_url", ""); },
+  get secret() { return PIPE_SECRET || DB.get("cfg_secret", ""); },
   get on()     { return !!(this.url && this.secret); }
 };
-/* Hudson is a separate webhook. These keys must never reuse cfg_url / cfg_secret. */
-const HUDSON = {
-  urlKey: "hudson_webhook_url",
-  keyKey: "hudson_sender_key",
-  asksKey: "hudson_asks",
-  get url() { try { return localStorage.getItem(this.urlKey) || ""; } catch (e) { return ""; } },
-  get key() { try { return localStorage.getItem(this.keyKey) || ""; } catch (e) { return ""; } },
-  get on()  { return !!(this.url && this.key); },
-  set(url, key) {
-    try {
-      if (url) localStorage.setItem(this.urlKey, url); else localStorage.removeItem(this.urlKey);
-      if (key) localStorage.setItem(this.keyKey, key); else localStorage.removeItem(this.keyKey);
-    } catch (e) {}
-  },
-  clear() { this.set("", ""); },
-  loadAsks() {
-    try { return JSON.parse(localStorage.getItem(this.asksKey) || "[]"); } catch (e) { return []; }
-  },
-  saveAsk(entry) {
-    const asks = this.loadAsks();
-    asks.unshift(entry);
-    try {
-      localStorage.setItem(this.asksKey, JSON.stringify(asks.slice(0, 40)));
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-};
-const HUDSON_RELAY = "https://sc-hudson-relay.vercel.app/api/hudson";
 const HUDSON_CTX = {};
 let syncing = false;
+const PIPE_OFF_MSG = "Saved on this device. The shared pipe is not live yet.";
 
-function hudsonRelayBody(fields) {
-  const body = {
-    text: fields.text || "",
-    source: fields.source || "",
-    card: fields.card || "",
-    action: fields.action || "",
-    itemId: fields.itemId || "",
-    mode: fields.mode != null ? fields.mode : mode,
-    page: fields.page != null ? fields.page : page,
-    at: fields.at || new Date().toISOString()
-  };
-  if (HUDSON.url && HUDSON.key) {
-    body.webhook = HUDSON.url;
-    body.key = HUDSON.key;
-  }
-  return body;
+function saveLocalNote(entry) {
+  const notes = DB.get("pipe_notes", []);
+  notes.unshift(entry);
+  DB.set("pipe_notes", notes.slice(0, 40));
 }
-async function postHudsonRelay(fields) {
-  return fetch(HUDSON_RELAY, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(hudsonRelayBody(fields))
-  });
+function queueOutbound(payload) {
+  const q = DB.get("pipe_queue", []);
+  q.unshift(Object.assign({ queuedAt: new Date().toISOString() }, payload));
+  DB.set("pipe_queue", q.slice(0, 40));
 }
 
 async function relay(payload) {
@@ -709,12 +668,12 @@ function openHudsonAsk(btn) {
     }).then(result => {
       if (result === "sent") {
         closeHudsonAsk();
-        rowHudsonNote(id, host, "Sent.", false);
+        rowHudsonNote(id, host, "Noted.", false);
       } else if (result === "saved") {
         closeHudsonAsk();
-        rowHudsonNote(id, host, "Saved. I'll take it from here.", false);
+        rowHudsonNote(id, host, PIPE_OFF_MSG, true);
       } else {
-        hudsonAskNote("Hudson is not connected on this device.", "bad");
+        hudsonAskNote(PIPE_OFF_MSG, "bad");
       }
     });
   };
@@ -739,32 +698,34 @@ async function askHudson(opts) {
     at: new Date().toISOString(),
     day: todayKey()
   };
-  const saved = HUDSON.saveAsk(payload);
+  saveLocalNote(payload);
   const tell = (msg, kind) => {
     askNote(msg, kind);
     if (flashId) flash(flashId, msg, kind === "bad");
     else if (opts.host) rowHudsonNote("", opts.host, msg, kind === "bad");
   };
-  try {
-    const r = await postHudsonRelay(payload);
-    if (r.ok) {
-      tell("Sent.", "ok");
-      return "sent";
-    }
-    if (saved) {
-      tell("Saved. I'll take it from here.", "ok");
-      return "saved";
-    }
-    tell("Hudson is not connected on this device.", "bad");
-    return false;
-  } catch (e) {
-    if (saved) {
-      tell("Saved. I'll take it from here.", "ok");
-      return "saved";
-    }
-    tell("Hudson is not connected on this device.", "bad");
-    return false;
+  const notePayload = {
+    op: "action",
+    kind: "note",
+    itemId: payload.itemId,
+    label: payload.action || "note",
+    text,
+    title: card,
+    notes: card
+  };
+  if (!CFG.on) {
+    queueOutbound(notePayload);
+    tell(PIPE_OFF_MSG, "bad");
+    return "saved";
   }
+  const res = await relay(notePayload);
+  if (res && res.ok) {
+    tell("Noted.", "ok");
+    return "sent";
+  }
+  queueOutbound(notePayload);
+  tell("Saved on this device. The shared pipe did not answer.", "bad");
+  return "saved";
 }
 
 function closeCarlitosAsk() {
@@ -817,12 +778,12 @@ function openCarlitosAsk(btn) {
     }).then(result => {
       if (result === "sent") {
         closeCarlitosAsk();
-        rowHudsonNote(id, host, "Sent.", false);
+        rowHudsonNote(id, host, "Noted.", false);
       } else if (result === "saved") {
         closeCarlitosAsk();
-        rowHudsonNote(id, host, "Saved. I'll take it from here.", false);
+        rowHudsonNote(id, host, PIPE_OFF_MSG, true);
       } else {
-        carlitosAskNote("Hudson is not connected on this device.", "bad");
+        carlitosAskNote(PIPE_OFF_MSG, "bad");
       }
     });
   };
@@ -847,14 +808,24 @@ async function sendCarlitosTask(opts) {
     at: new Date().toISOString(),
     day: todayKey()
   };
-  const saved = HUDSON.saveAsk(payload);
-  try {
-    const r = await postHudsonRelay(payload);
-    if (r.ok) return "sent";
-    return saved ? "saved" : false;
-  } catch (e) {
-    return saved ? "saved" : false;
+  saveLocalNote(payload);
+  const notePayload = {
+    op: "action",
+    kind: "note",
+    itemId,
+    label: payload.action || "note",
+    text,
+    title: card,
+    notes: card
+  };
+  if (!CFG.on) {
+    queueOutbound(notePayload);
+    return "saved";
   }
+  const res = await relay(notePayload);
+  if (res && res.ok) return "sent";
+  queueOutbound(notePayload);
+  return "saved";
 }
 
 /* item-level board state: done, snoozed, dropped */
@@ -1134,27 +1105,11 @@ function bizThen() {
 function connectCard() {
   return "";
 }
-function hudsonConnectCard(kind) {
-  if (kind === "needed" && HUDSON.on) return "";
-  if (kind === "connected" && !HUDSON.on) return "";
-  if (HUDSON.on) {
-    return card("Ask Hudson",
-      `<p style="margin:0 0 13px">Connected on this device. Asks from the bar and from cards go to the Hudson webhook, not the Apps Script relay.</p>
-       <button type="button" class="act quiet" id="hudsonclear">Disconnect Hudson</button>
-       <div class="flash" id="flash-hudson"></div>`,
-      { wide: true, cls: "connect", right: "connected" });
-  }
-  return card("Hudson (optional)",
-    `<p style="margin:0 0 13px">This phone can check off and send notes now. Connecting Hudson is optional for a faster reply. Paste a webhook URL and sender key if you want them on this device.</p>
-     <input id="hudsonurl" placeholder="Hudson webhook URL" autocomplete="off">
-     <input id="hudsonkey" placeholder="Hudson sender key" autocomplete="off">
-     <button type="button" class="act quiet" id="hudsonsave">Connect Hudson</button>
-     <div class="flash" id="flash-hudson"></div>`,
-    { wide: true, cls: "connect", right: "optional" });
+function hudsonConnectCard() {
+  return "";
 }
 function hudsonPhoneNote() {
-  if (HUDSON.on) return "";
-  return `<div class="hudson-phone"><p>This phone can check off and send notes now. Connecting Hudson is optional for a faster reply.</p></div>`;
+  return "";
 }
 function bizSchedule() {
   const rows = BIZ.schedule.map(r => `<div class="row"><div class="time">${r[0]}</div><div class="what">${r[1]}</div></div>`).join("");
@@ -1176,10 +1131,8 @@ function utilityBlock(html) {
 }
 const BIZVIEWS = {
   overview: () =>
-    hudsonPhoneNote() +
     (bizSiren() ? `<div class="stage">${bizSiren()}</div>` : "") +
-    `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>` +
-    utilityBlock(hudsonConnectCard("needed") + hudsonConnectCard("connected")),
+    `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>`,
   schedule: () => `<div class="after">${bizSchedule()}</div>`,
   money: () => `<div class="after">${bizMoney()}${bizWaiting()}</div>`,
   followups: () => `<div class="after">${bizDrafts()}${bizWaiting()}${bizThen()}</div>`,
@@ -1312,8 +1265,7 @@ function todayView() {
     + `<div class="after">${card("Quick checks", quick, { cls: "quiet" })}
     ${card("Waiting on", waitRows + hudsonAct("today-wait", "Waiting on", waitRows), { cls: "quiet" })}
     ${bizNudge}
-    ${card("Personal, low stakes", personalHtml + hudsonAct("today-personal", "Personal, low stakes", personalHtml), { cls: "quiet" })}</div>`
-    + utilityBlock(hudsonConnectCard("needed"));
+    ${card("Personal, low stakes", personalHtml + hudsonAct("today-personal", "Personal, low stakes", personalHtml), { cls: "quiet" })}</div>`;
 }
 
 /* ---------------- PERSONAL: BRAIN DUMP ---------------- */
@@ -1496,10 +1448,10 @@ function renderGreet() {
     : page === "sixg"
       ? " · Residences at 6G, unit 5316"
       : " · Zone " + currentZone().n + ", " + currentZone().name);
-  const hudson = HUDSON.on
-    ? `<div class="footline"><span class="dot on"></span>Hudson is connected.</div>`
-    : `<div class="footline"><span class="dot off"></span>This phone can check off and send notes. Hudson connect is optional.</div>`;
-  el("#sidefoot").innerHTML = hudson;
+  const pipe = CFG.on
+    ? `<div class="footline"><span class="dot on"></span>Shared pipe is live. Devices stay in sync.</div>`
+    : `<div class="footline"><span class="dot off"></span>This device only. Shared pipe is not live yet.</div>`;
+  el("#sidefoot").innerHTML = pipe;
   const askin = el("#askin");
   if (askin && document.activeElement !== askin) {
     askin.placeholder = mode === "business"
@@ -1548,26 +1500,52 @@ async function doAction(itemId, n) {
   const item = ACT_INDEX[itemId];
   if (!item) return;
   const a = item.act[n];
+  const actionPayload = {
+    op: "action", kind: a.k, itemId, label: a.label,
+    to: a.to, subject: a.subject, text: a.text, title: a.title, notes: a.notes
+  };
 
-  /* hide first from this device; relay is best-effort and must not block */
+  /* hide first on this device, then tell the shared pipe. No Hudson keys. No Vercel. */
   if (a.k === "done") {
-    const cardText = hudsonCardText(itemId);
     setItemState(itemId, { k: "done", at: todayKey() });
     render();
-    askNote("Cleared.", "ok");
-    sendCarlitosTask({
-      text: "Marked complete.",
-      action: "done",
-      itemId,
-      card: cardText
-    });
+    if (CFG.on) relay(actionPayload);
     return;
   }
-  if (a.k === "drop")   { setItemState(itemId, { k: "drop", at: todayKey() }); render(); return; }
+  if (a.k === "drop") {
+    setItemState(itemId, { k: "drop", at: todayKey() });
+    render();
+    if (CFG.on) relay(actionPayload);
+    return;
+  }
   if (a.k === "snooze") {
     const t = new Date(); t.setDate(t.getDate() + 1);
     setItemState(itemId, { k: "snooze", until: t.toLocaleDateString("en-CA", { timeZone: "America/Chicago" }) });
-    render(); return;
+    render();
+    if (CFG.on) relay(actionPayload);
+    return;
+  }
+
+  if (a.k === "draft" || a.k === "task" || a.k === "note") {
+    if (!CFG.on) {
+      queueOutbound(actionPayload);
+      flash(itemId, PIPE_OFF_MSG, true);
+      return;
+    }
+    const btns = view.querySelectorAll(`[data-act="${itemId}"]`);
+    btns.forEach(b => b.setAttribute("disabled", ""));
+    flash(itemId, "Sending...");
+    const res = await relay(actionPayload);
+    btns.forEach(b => b.removeAttribute("disabled"));
+    if (res && res.ok) {
+      if (a.k === "draft") flash(itemId, "Draft created in SC@. Nothing was sent.");
+      else flash(itemId, res.message || "Done.");
+      if (a.k === "draft" || a.k === "note") setItemState(itemId, { k: "sent", at: todayKey(), what: a.label });
+    } else {
+      queueOutbound(actionPayload);
+      flash(itemId, "Did not go through. Saved on this device.", true);
+    }
+    return;
   }
 
   flash(itemId, "This stays on the card. Nothing was sent.");
@@ -1593,26 +1571,6 @@ function wire() {
       DB.set("cfg_url", ""); DB.set("cfg_secret", "");
       flash("cfg", "No answer. Check the URL ends in /exec, that access is set to Anyone, and that the secret matches.", true);
     }
-  };
-
-  /* Hudson webhook, separate from CFG.url / CFG.secret */
-  const hs = view.querySelector("#hudsonsave");
-  if (hs) hs.onclick = () => {
-    const u = (view.querySelector("#hudsonurl") || {}).value;
-    const k = (view.querySelector("#hudsonkey") || {}).value;
-    const url = (u || "").trim();
-    const key = (k || "").trim();
-    if (!url || !key) { flash("hudson", "Both fields, please.", true); return; }
-    HUDSON.set(url, key);
-    flash("hudson", "Hudson is connected on this device.");
-    askNote("Hudson is connected.", "ok");
-    setTimeout(render, 500);
-  };
-  const hc = view.querySelector("#hudsonclear");
-  if (hc) hc.onclick = () => {
-    HUDSON.clear();
-    askNote("Hudson disconnected. This phone can still check off and send notes.", "ok");
-    render();
   };
 
   view.querySelectorAll("[data-carlitos]").forEach(b => b.onclick = () => openCarlitosAsk(b));
@@ -1791,11 +1749,10 @@ el("#briefbtn").onclick = () => {
   }
 })();
 
-render();
-
-/* pull shared state on load, then keep pushing local changes up */
+/* pull shared state first so phone and laptop agree, then paint */
 (async () => {
-  if (await pullState()) render();
+  await pullState();
+  render();
 })();
 const _set = DB.set;
 window.addEventListener("beforeunload", pushState);
