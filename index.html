@@ -43,13 +43,14 @@ a{color:var(--berry)}
   padding:22px 14px 18px;position:sticky;top:0;height:100vh;overflow-y:auto;
   display:flex;flex-direction:column;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.055) 0%, transparent 56px),
-    linear-gradient(90deg, #2a2929 0%, var(--ink) 12%, #2d2c2c 100%);
-  border-right:1px solid rgba(0,0,0,.55);
+    repeating-linear-gradient(180deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #3c3b3b 0%, var(--ink) 42px, #2a2929 100%);
+  border-right:1px solid rgba(204,159,83,.22);
   box-shadow:
-    inset 1px 0 0 rgba(255,255,255,.07),
-    inset 0 1px 0 rgba(255,255,255,.1),
-    inset -1px 0 0 rgba(255,255,255,.03);
+    inset 1px 0 0 rgba(255,255,255,.14),
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset -1px 0 0 rgba(0,0,0,.45),
+    1px 0 0 rgba(0,0,0,.35);
 }
 .brand{display:flex;align-items:center;gap:11px;padding:2px 8px 18px;margin:0 2px 2px;
   border-bottom:1px solid var(--hair);
@@ -88,9 +89,12 @@ a{color:var(--berry)}
   font-weight:400;text-align:left}
 .navlist button:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.92)}
 .navlist button.on{
-  background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+  background:linear-gradient(180deg, #3d3c3c, #323131);
   color:#fff;font-weight:600;
-  box-shadow:inset 0 0 0 1px var(--hair), inset 2px 0 0 var(--berry);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.4),
+    inset 2px 0 0 var(--berry);
 }
 .navlist .ico{width:16px;text-align:center;font-size:12px;flex:0 0 auto;opacity:.7;letter-spacing:0}
 .navlist button.on .ico{opacity:1}
@@ -115,31 +119,31 @@ a{color:var(--berry)}
 .workhead h1 b{font-weight:800}
 .workhead .date{color:var(--muted);font-size:13px;margin-top:8px;letter-spacing:.01em;max-width:62ch;line-height:1.45}
 .brief{
-  background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:8px;
-  padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  white-space:nowrap;margin-top:2px}
-.brief:hover{border-color:var(--berry);color:var(--berry)}
+  background:transparent;color:var(--muted);border:0;border-radius:0;
+  padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  white-space:nowrap;margin-top:4px}
+.brief:hover{color:var(--berry)}
 
-.askbar{margin-top:18px}
-.askbar .k{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:8px}
-.askrow{display:flex;gap:8px;align-items:stretch}
-.askrow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;
-  padding:11px 13px;font-family:inherit;font-size:15px;background:#fff;color:var(--ink)}
-.askrow input:focus{outline:none;border-color:var(--ink)}
-.askrow button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:0 18px;
-  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto}
-.askrow button:hover{background:var(--berry)}
+.askbar{margin-top:20px}
+.askbar .k{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px}
+.askrow{display:flex;gap:10px;align-items:center}
+.askrow input{flex:1;min-width:0;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  padding:10px 0;font-family:inherit;font-size:16px;background:transparent;color:var(--ink)}
+.askrow input:focus{outline:none;border-bottom-color:var(--ink)}
+.askrow button{border:0;background:transparent;color:var(--ink);border-radius:0;padding:8px 0;
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;flex:0 0 auto}
+.askrow button:hover{color:var(--berry)}
 .asknote{font-size:12.5px;color:var(--muted);margin-top:0;min-height:0;line-height:1.45}
 .asknote.show{margin-top:8px}
 .asknote.bad{color:var(--berry)}
 .asknote.ok{color:var(--green)}
 
 .grid{display:flex;flex-direction:column;gap:0;max-width:860px;align-items:stretch}
-.stage{padding:28px 0 8px}
-.after{padding:8px 0 0;display:flex;flex-direction:column;gap:0}
-.quietpair{display:grid;grid-template-columns:1fr 1fr;gap:0 36px}
-.utility{padding:36px 0 0;margin-top:12px;border-top:1px solid var(--line)}
+.stage{padding:36px 0 8px}
+.after{padding:28px 0 0;margin-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:0}
+.quietpair{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.utility{padding:28px 0 0;margin-top:8px;border-top:1px solid var(--line);opacity:.88}
 
 .card{background:transparent;border:0;border-radius:0;padding:20px 0 22px;
   border-bottom:1px solid var(--line)}
@@ -172,22 +176,25 @@ a{color:var(--berry)}
 code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 
 /* The one loud surface. Everything else stays quiet. */
-.card.focus{padding:8px 0 32px;border-bottom:0}
+.card.focus{padding:4px 0 8px;border-bottom:0}
 .card.focus h2{
-  display:block;color:var(--ink);font-size:28px;line-height:1.2;font-weight:700;
-  letter-spacing:-.025em;text-transform:none;margin:0 0 18px}
-.card.focus h2 .kicker{margin-bottom:10px}
+  display:block;color:var(--ink);font-size:32px;line-height:1.18;font-weight:700;
+  letter-spacing:-.03em;text-transform:none;margin:0 0 20px}
+.card.focus h2 .kicker{margin-bottom:12px;font-size:10.5px}
 .card.focus h2 .rt{display:none}
-.card.focus .card-body{font-size:16px;line-height:1.55;max-width:62ch}
-.card.focus .acts{margin-top:20px}
-.card.focus .act:not(.quiet){background:var(--berry);color:#fff;border-color:var(--berry);padding:10px 16px}
+.card.focus .card-body{font-size:16.5px;line-height:1.55;max-width:58ch}
+.card.focus .acts{margin-top:22px}
+.card.focus .act:not(.quiet){background:var(--berry);color:#fff;border-color:var(--berry);padding:11px 18px}
 .card.focus .act:not(.quiet):hover{background:var(--berry-deep);border-color:var(--berry-deep)}
-.card.focus .top3{padding:14px 2px}
-.card.focus .top3 input{font-size:18px;padding:8px 2px}
+.card.focus .top3{padding:16px 2px}
+.card.focus .top3 input{font-size:20px;padding:8px 2px}
 .card.hero{position:relative;padding:8px 0 28px;border-bottom:0}
 .card.hero > h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-.after .card{font-size:14.5px}
-.after .act:not(.quiet){border-color:var(--line);color:var(--ink)}
+.after .card{font-size:14px;padding:18px 0}
+.after .card h2{font-size:10px;letter-spacing:.16em;margin-bottom:12px}
+.after .acts{margin-top:8px}
+.after .act{padding:5px 10px;font-size:11px;letter-spacing:.02em;border-width:1px;border-radius:6px}
+.after .act:not(.quiet){border-color:var(--line);color:var(--ink);background:transparent}
 .after .act:not(.quiet):hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .card.handled{padding:18px 0}
 .card.handled .zero{text-align:left;padding:0;color:var(--muted)}
@@ -904,7 +911,7 @@ function ulActs(arr) {
     const acts = (i.act || []).map((a, n) =>
       `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}"
         data-act="${i.id}" data-n="${n}">${a.label}</button>`).join("")
-      + `<button type="button" class="act" data-hudson="${i.id}">Ask Hudson</button>`;
+      + `<button type="button" class="act quiet" data-hudson="${i.id}">Ask Hudson</button>`;
     return `<li>${i.html}
       <div class="acts">${acts}</div>
       <div class="flash" id="flash-${i.id}"></div></li>`;
