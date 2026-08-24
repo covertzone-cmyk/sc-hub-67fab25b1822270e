@@ -451,7 +451,7 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
       <div class="askbar">
         <div class="k">Ask Hudson</div>
         <div class="askrow">
-          <input id="askin" placeholder="Pull up the Vilcek email" autocomplete="off">
+          <input id="askin" placeholder="Ask Hudson" autocomplete="off">
           <button type="button" id="askbtn">Ask</button>
         </div>
         <div class="asknote" id="asknote"></div>
@@ -831,8 +831,13 @@ async function sendCarlitosTask(opts) {
 }
 
 /* item-level board state: done, snoozed, dropped */
-function itemState(id) { return DB.get("item_" + id, null); }
-function setItemState(id, v) { DB.set("item_" + id, v); pushState(); }
+function itemKey(itemOrId) {
+  if (itemOrId && typeof itemOrId === "object") return itemOrId.stateId || itemOrId.id;
+  const item = ACT_INDEX[itemOrId];
+  return (item && item.stateId) || itemOrId;
+}
+function itemState(id) { return DB.get("item_" + itemKey(id), null); }
+function setItemState(id, v) { DB.set("item_" + itemKey(id), v); pushState(); }
 
 /* ---------- dates, always America/Chicago ---------- */
 function todayKey() {
@@ -962,28 +967,13 @@ function daysOld(iso) {
    ===================================================================== */
 const BIZ = {
   stamp: "Sunday, August 16, 2026, morning ops. Verified against Gmail (covertzone and SC@) and Google Calendar.",
-  siren: {
-    title: "Peter Hurley's studio referred you a job. It has now sat unread for 50 hours.",
-    items: [
-      "<span class='big'>Sasha Burshteyn at the Vilcek Foundation is waiting on your availability and you have not opened her email.</span> Britney at <code>info@peterhurley.com</code> introduced you Friday Aug 14 at 9:08 AM to shoot a Vilcek prizewinner at your studio, lighting and look specified by Hurley's team, JPEGs back for the gallery afterward. Sasha replied at <strong>9:23 AM asking for your availability over the coming weeks</strong>, cc'ing Zahra Banyamerian. All three are <strong>still unread in covertzone</strong>. This was the number one item on Saturday's board and it did not move.",
-      "<span class='big'>It is the best referral source that has ever landed in either inbox.</span> Answer Sasha today with two or three windows, keep Britney and Zahra copied, and give them SC@ going forward. Ten minutes."
-    ]
-  },
+  siren: null,
   then: [
-    { id: "tony-delivery",
-      html: "<span class='big'>Tony Matchus's shoot was Friday and there is no sign of what happened next.</span> Two days post shoot: no delivery email, no gallery notice, no invoice, no Sprout activity. Confirm, then start the post shoot workflow. Draft <code>r5840061693162751597</code> is dead either way.",
-      act: [
-        { k: "note", label: "Start delivery", text: "Run the post-shoot delivery workflow for Tony Matchus. Shoot was Fri Aug 14. Check whether it happened, then rename files, draft the delivery email, check the invoice, and queue the review request." },
-        { k: "done", label: "Already handled" },
-        { k: "snooze", label: "Tomorrow" }
-      ] },
     { id: "keri-thanks",
-      html: "<span class='big'>Send Keri Waters a thank you.</span> 37 days after you drafted an ask you never sent, she referred Ryan anyway. Draft <code>r259045257505120435</code> is the wrong email now.",
+      stateId: "keri-thanks-sent",
+      html: "<span class='big'>Sent from SC@ today 8:00 AM CT. Thanked her for Ryan, asked coffee/lunch.</span>",
       act: [
-        { k: "draft", label: "Yes, create that thank you note",
-          to: "", subject: "Thank you for the AegisCoat referral",
-          text: "Keri,\n\nRyan Evans reached out and mentioned you sent him my way. Thank you. He could not come for the shoot and left town.\n\nI will be honest with you. I had been meaning to reach out for a while and never did, and you referred someone anyway. That says a lot about you and I am grateful for it.\n\nIf there is ever anything I can send your way, tell me what a good referral looks like for you and I will keep an eye out.\n\nThank you again,\nSuzanne" },
-        { k: "done", label: "Already sent it" },
+        { k: "done", label: "Done" },
         { k: "drop", label: "Drop it" }
       ] },
     { id: "sprout-calendar",
@@ -991,74 +981,43 @@ const BIZ = {
       act: [
         { k: "task", label: "Add to my task list", title: "Reconnect Sprout Studio to Google Calendar" },
         { k: "done", label: "Done, reconnected" }
-      ] },
-    { id: "dead-drafts",
-      html: "<span class='big'>Delete seven dead drafts.</span> Takes SC@ from 10 drafts to 4 real ones.",
-      act: [
-        { k: "note", label: "Carlitos2, clean them up", text: "Delete the seven dead drafts in SC@: Tony Matchus prep r5840061693162751597, two duplicate Andria nudges, two superseded Poynton proposals, the obsolete Keri ask r259045257505120435. Show me the list before deleting anything." },
-        { k: "done", label: "Already cleaned" }
       ] }
   ],
   schedule: [
-    ["Today", "Calendar is empty <span class='tag t-ok'>Clear</span><span class='sub'>No shoots, no calls, no appointments.</span>"],
-    ["Mon Aug 17", "1:00 to 2:30 PM, Courtney coming to studio<span class='sub'>Personal. Only event Monday.</span>"],
-    ["Wed Aug 19", "9:00 to 10:00 AM, eyelash refill"]
+    ["Today", "Calendar is empty <span class='tag t-ok'>Clear</span><span class='sub'>No shoots, no calls, no appointments.</span>"]
   ],
-  scheduleNote: "Second clear day in a row. The Vilcek reply takes ten minutes and it is the highest value ten minutes on this board by a wide margin.",
+  scheduleNote: "Clear day. Nothing on the calendar.",
   money: [
     "<span class='tag t-money'>Largest</span> <strong>LPC / Lauren Soules $2,706.25</strong>, now <strong>13 days past due</strong>. Two automated Sprout notices, zero personal contact. Her Jul 29 note is also unanswered. A short human note beats a third robot email.",
-    "<span class='tag t-money'>New</span> <strong>HydroGraph SS-00282, $3,031.00.</strong> Sprout auto sent Jennifer an overdue notice at 9:04 AM: <strong>5 days past due</strong>. BILL confirmed Aug 13 it is in their AP system. Sitting, not lost.",
-    "<span class='tag t-old'>Stale</span> <strong>Monty Kosma $1,125</strong>, about 40 days past due, shoot still undated, 11 days since last check in. Call him.",
-    "<strong>Tony Matchus</strong> booked as a Deluxe Session ($425 list). No invoice two days after the shoot.",
-    "<strong>800 Brazos ACH.</strong> Kate Rudd's bank details arrived Aug 13. Your memo question is drafted and unsent (<code>r754243570887468628</code>), 2 days. Set it up before September rent.",
+    "<strong>800 Brazos ACH.</strong> Kate Rudd's bank details arrived Aug 13. Set it up before September rent.",
     "<span class='tag t-ok'>Cleared</span> Food Corridor $2,922.75 banked Aug 12. Monica Clodius $405.94 paid. Square loan balance $5,457.84."
   ],
   waiting: [
-    "<strong>Sasha Burshteyn / Vilcek</strong> is waiting on <em>you</em>. See the top card.",
     "<strong>Ashley Colpaart</strong> on Ben's pick from the alternates. Sent Aug 13. 3 days.",
     "<strong>Bernadette Ikhena / Stout</strong> on scheduling. Follow up Aug 14. 2 days.",
     "<strong>Kurt Bonatz</strong> on the Poynton 11 executive Sept 16 proposal. Check in ready Aug 18.",
     "<strong>Sean Donahue</strong> on packages and pricing, sent Aug 13. Nudge drafted.",
-    "<strong>Andria Wilson</strong> 14 days. <strong>Monty Kosma</strong> 11 days. <strong>Lauren Soules / LPC</strong>. <strong>Nezelia</strong> on Greenbelt times."
+    "<strong>Andria Wilson</strong> 14 days. <strong>Lauren Soules / LPC</strong>. <strong>Nezelia</strong> on Greenbelt times."
   ],
   drafts: [
-    "<span class='tag t-hot'>New</span> <strong>Sean Donahue first nudge</strong> <code>1a00bb730fa7c246</code>. Pricing link is 3 days old, cadence is due. Second nudge about Aug 21.",
-    "<span class='tag t-hot'>Send</span> <strong>Monica Clodius review request</strong> <code>r6294471054737317093</code>. Paid, delivered, downloaded. Perfect timing.",
-    "<span class='tag t-hot'>Send</span> <strong>Kate Rudd / 800 Brazos ACH</strong> <code>r754243570887468628</code>. One question, unblocks September rent.",
-    "<span class='tag t-hot'>Send</span> <strong>Aaron Poynton check in</strong> <code>r-2892637929589931496</code>. Ready Aug 18.",
-    "<span class='tag t-hot'>Hold</span> <strong>Andria Wilson second nudge</strong> <code>r-4879631843010284485</code>. 14 days since her Aug 2 answers.",
-    "<span class='tag t-dead'>Delete</span> <strong>Tony Matchus prep</strong> <code>r5840061693162751597</code>. Shoot has passed.",
-    "<span class='tag t-dead'>Delete</span> <strong>2 duplicate Andria nudges</strong>, <strong>2 superseded Poynton proposals</strong>.",
-    "<span class='tag t-dead'>Rewrite</span> <strong>Keri Waters</strong> <code>r259045257505120435</code>. Ask becomes thank you."
+    "<span class='tag t-hot'>New</span> <strong>Sean Donahue first nudge</strong> <code>1a00bb730fa7c246</code>. Pricing link is 3 days old, cadence is due. Second nudge about Aug 21."
   ],
   aged: [
-    "<strong>Vilcek / Peter Hurley referral: <span class='days'>50 hours</span> unread.</strong> Newest here and the most expensive.",
     "<strong>LPC $2,706.25: <span class='days'>13 days</span> past due.</strong> Largest open receivable.",
-    "<strong>HydroGraph $3,031.00: <span class='days'>5 days</span> past due.</strong> In their AP, not lost.",
     "<strong>Greenbelt event contract to Nezelia: <span class='days'>31 days</span>.</strong> Still never sent.",
-    "<strong>Monty Kosma $1,125: <span class='days'>about 40 days</span> past due, shoot undated.</strong> Call him.",
     "<strong>Mystery $405.94 invoice: <span class='days'>about 45 days</span>.</strong> Monica paid exactly $405.94 Aug 10. Check if that closes it.",
     "<strong>Claire's testimonials and IG handle: <span class='days'>about 40 days</span>.</strong> Only thing blocking Pawline v2.",
     "<strong>Squarespace card failure: <span class='days'>about 38 days</span>.</strong>",
-    "<strong>Keri Waters: <span class='days'>about 37 days</span>,</strong> now a thank you.",
-    "<strong>Sam Coon: <span class='days'>about 36 days</span>.</strong> Call him.",
     "<strong>Q3 reactivation batch: <span class='days'>about 35 days</span>.</strong>",
     "<strong>Prescription and glasses: <span class='days'>about 34 days</span>.</strong>",
-    "<strong>Thomas Brophy / Grant Thornton: <span class='days'>about 26 days</span>,</strong> draft gone, needs rewriting.",
-    "<strong>Ian Simmons / Holland &amp; Knight: <span class='days'>about 19 days</span>.</strong> Billing contact update pending.",
     "<strong>Cambry Napier's KC batch: <span class='days'>about 18 days</span>,</strong> no delivery date.",
-    "<strong>Shea / Headshot Studio KC: <span class='days'>about 17 days</span>.</strong> Drive folder shared Aug 13, unopened. She arrives Austin Sep 3.",
     "<strong>Pawline v2 built and unpublished: <span class='days'>about 17 days</span>.</strong> One Netlify drag from live.",
     "<strong>Lori Zabroski warm intro: <span class='days'>about 15 days</span>.</strong>",
-    "<strong>Tony Matchus delivery:</strong> 2 days post shoot, nothing started.",
     "<strong>Joshua Arguello's headshot redo</strong> has no date, webAI still not on the website.",
-    "<strong>HydroGraph session 2 Sprout record</strong> does not exist, so video and assistant time never auto invoice.",
     "<strong>Move the Sep 2 eyelash refill</strong> before the Albuquerque trip. <strong>Decide on FastSpring</strong> before the Sep 1 renewal."
   ],
   facts: [
-    "<strong>No new client inquiries and no website form submissions since Friday.</strong>",
-    "<strong>One client email is past 24 hours with no reply, and it is the Vilcek thread at 50 hours.</strong> Everything else that is silent is silent on their side.",
-    "<strong>The wrong inbox problem is two days old and unaddressed.</strong> Business belongs in SC@, but Peter Hurley's studio has covertzone on file, which is exactly where the referral got buried."
+    "<strong>No new client inquiries and no website form submissions since Friday.</strong>"
   ]
 };
 
@@ -1069,9 +1028,9 @@ const NAV = {
   business: [
     { id: "overview", ico: "◆", label: "Overview" },
     { id: "schedule", ico: "▦", label: "Schedule" },
-    { id: "money", ico: "$", label: "Money", badge: "3" },
+    { id: "money", ico: "$", label: "Money", badge: "1" },
     { id: "followups", ico: "✉", label: "Follow ups" },
-    { id: "loose", ico: "⚠", label: "Loose Ends", badge: "22" }
+    { id: "loose", ico: "⚠", label: "Loose Ends", badge: "12" }
   ],
   personal: [
     { id: "today", ico: "☀", label: "Today" },
@@ -1099,33 +1058,13 @@ function card(title, bodyHTML, opts) {
 const ul = arr => "<ul><li>" + arr.join("</li><li>") + "</li></ul>";
 
 /* ---------------- BUSINESS ---------------- */
-const SIREN_ITEM = {
-  id: "vilcek-reply",
-  act: [
-    { k: "draft", label: "Draft the reply to Sasha now",
-      to: "", subject: "Re: Vilcek prizewinner headshot, availability",
-      text: "Hi Sasha,\n\nThank you for reaching out, and Britney, thank you for the introduction.\n\nI would be glad to shoot this at my studio. Here are three windows over the next two weeks:\n\n[option 1]\n[option 2]\n[option 3]\n\nTell me which works and I will hold it. I will match the lighting and look your team specified and send the JPEGs back for the gallery as soon as they are finished.\n\nGoing forward, the best address for me is SC@suzannecovert.com. Britney, would you mind updating that on your end?\n\nLooking forward to it,\nSuzanne Covert\nSuzanne Covert Photography\n800 Brazos Street, Suite 290, Austin TX 78701\n512-660-3116" },
-    { k: "done", label: "Already replied" }
-  ]
-};
 function bizSiren() {
-  const s = itemState(SIREN_ITEM.id);
-  if (s && (s.k === "done" || s.k === "drop")) {
-    return card("Vilcek referral", `<div class="zero">Handled. Good.</div>`,
-      { wide: true, cls: "handled quiet" });
-  }
-  rememberHudson(SIREN_ITEM.id, BIZ.siren.title, BIZ.siren.items.join(" "));
-  const acts = SIREN_ITEM.act.map((a, n) =>
-    `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("")
-    + taskReplyActs(SIREN_ITEM.id);
-  return card(BIZ.siren.title,
-    ul(BIZ.siren.items) + `<div class="acts">${acts}</div><div class="flash" id="flash-${SIREN_ITEM.id}"></div>`,
-    { wide: true, cls: "focus", kicker: "Do this now" });
+  return "";
 }
 /* renders a list whose entries carry action buttons */
 function ulActs(arr) {
   const live = arr.filter(i => {
-    const s = itemState(i.id);
+    const s = itemState(i);
     if (!s) return true;
     if (s.k === "drop" || s.k === "done") return false;
     if (s.k === "snooze") return s.until <= todayKey();
@@ -1144,7 +1083,7 @@ function ulActs(arr) {
   }).join("") + "</ul>";
 }
 function bizThen() {
-  const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i.id) || itemState(i.id).k === "snooze" && itemState(i.id).until <= todayKey()).length;
+  const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i) || itemState(i).k === "snooze" && itemState(i).until <= todayKey()).length;
   return card("Then these", ulActs(BIZ.then),
     { wide: true, cls: "quiet", right: hidden > 0 ? `${hidden} cleared` : "" });
 }
@@ -1177,7 +1116,7 @@ function bizSchedule() {
 }
 function bizMoney() { return card("Money", ul(BIZ.money) + hudsonAct("money", "Money", ul(BIZ.money))); }
 function bizWaiting() { return card("Waiting on them", ul(BIZ.waiting) + hudsonAct("waiting", "Waiting on them", ul(BIZ.waiting))); }
-function bizDrafts() { return card("Drafted, unsent", ul(BIZ.drafts) + hudsonAct("drafts", "Drafted, unsent", ul(BIZ.drafts)), { right: "SC@ is at 10" }); }
+function bizDrafts() { return card("Drafted, unsent", ul(BIZ.drafts) + hudsonAct("drafts", "Drafted, unsent", ul(BIZ.drafts)), { right: "SC@ is at 2" }); }
 function bizAged() { return card("Open 5 or more days", ul(BIZ.aged) + hudsonAct("aged", "Open 5 or more days", ul(BIZ.aged)), { wide: true, collapsed: true }); }
 function bizFacts() { return card("Facts from this run", ul(BIZ.facts) + hudsonAct("facts", "Facts from this run", ul(BIZ.facts)), { wide: true, collapsed: true }); }
 
@@ -1186,7 +1125,7 @@ function utilityBlock(html) {
 }
 const BIZVIEWS = {
   overview: () =>
-    `<div class="stage">${bizSiren()}</div>` +
+    (bizSiren() ? `<div class="stage">${bizSiren()}</div>` : "") +
     `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>` +
     utilityBlock(hudsonConnectCard("needed") + hudsonConnectCard("connected")),
   schedule: () => `<div class="after">${bizSchedule()}</div>`,
@@ -1304,7 +1243,6 @@ function todayView() {
 
   const p = nowParts();
   const bizNudgeHtml = `<ul>
-      <li><span class="big">Vilcek referral, 50 hours unread.</span> Ten minutes, highest value thing on either tab.</li>
       <li>Denise Bodman asked about your move timeline Aug 14 and is still waiting, 2 days.</li>
       <li>ACL Weekend One layaway auto charges <strong>tomorrow, Aug 17</strong>.</li>
     </ul>`;
@@ -1513,7 +1451,7 @@ function renderGreet() {
   const askin = el("#askin");
   if (askin && document.activeElement !== askin) {
     askin.placeholder = mode === "business"
-      ? "Pull up the Vilcek email"
+      ? "Ask Hudson"
       : page === "sixg"
         ? "Ask about 6G"
         : "Ask Hudson";
@@ -1552,7 +1490,7 @@ function flash(id, msg, bad) {
 }
 
 const ACT_INDEX = {};
-[SIREN_ITEM].concat(BIZ.then).forEach(i => ACT_INDEX[i.id] = i);
+BIZ.then.forEach(i => ACT_INDEX[i.id] = i);
 
 async function doAction(itemId, n) {
   const item = ACT_INDEX[itemId];
