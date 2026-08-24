@@ -144,15 +144,16 @@ a{color:var(--berry)}
   border-left:3px solid var(--gold);
 }
 .hudsonask-k{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:.01em}
-.hudsonask-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hudsonask-row{display:flex;gap:8px;align-items:stretch;flex-wrap:nowrap}
 .hudsonask-row input{
-  flex:1 1 200px;min-width:0;
+  flex:1 1 auto;min-width:0;min-height:44px;
   border:1px solid var(--ink);background:#fff;color:var(--ink);
   padding:10px 12px;font-family:inherit;font-size:16px;border-radius:0}
 .hudsonask-row input:focus{outline:none;border-color:var(--ink)}
 .hudsonask .act{
   flex:0 0 auto;border:1.5px solid var(--berry);background:var(--berry);color:#fff;
-  border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:700}
+  border-radius:8px;padding:10px 16px;min-height:44px;min-width:72px;font-size:13px;font-weight:700}
+.hudsonask-x{margin-top:8px;min-height:44px}
 .hudsonask .act:hover{background:var(--berry-deep);border-color:var(--berry-deep);color:#fff}
 .hudsonask .act.quiet{background:#fff;color:var(--ink);border-color:var(--line)}
 .hudsonask .act.quiet:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -358,6 +359,11 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:7px}
 .dot.on{background:var(--green)}
 .dot.off{background:var(--berry)}
+.hudson-phone{
+  background:var(--gold-soft);border-left:3px solid var(--gold);
+  padding:12px 14px 13px;margin:0 0 10px;max-width:860px;
+  font-size:13.5px;line-height:1.45;color:var(--ink)}
+.hudson-phone p{margin:0}
 
 /* ---------- MOBILE ---------- */
 .mobar{display:none}
@@ -407,6 +413,13 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
   .collapsible h2{cursor:pointer}
   .collapsible h2:after{content:"+";font-size:17px;color:var(--muted)}
   .collapsible.open h2:after{content:"\2212"}
+  .main,.grid,.card,.card li,.acts,.hudsonask{max-width:100%;overflow-x:clip}
+  .acts{gap:8px}
+  .act,.after .act{
+    min-height:44px;padding:10px 14px;font-size:13px;letter-spacing:.02em}
+  .hudsonask{max-width:100%}
+  .hudsonask-row{flex-wrap:nowrap}
+  .hudsonask-row input,.hudsonask .act,.hudsonask-x{min-height:44px}
 }
 @media (min-width:861px){
   .card-body{display:block !important}
@@ -519,12 +532,42 @@ const HUDSON = {
   saveAsk(entry) {
     const asks = this.loadAsks();
     asks.unshift(entry);
-    try { localStorage.setItem(this.asksKey, JSON.stringify(asks.slice(0, 40))); } catch (e) {}
+    try {
+      localStorage.setItem(this.asksKey, JSON.stringify(asks.slice(0, 40)));
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 };
 const HUDSON_RELAY = "https://sc-hudson-relay.vercel.app/api/hudson";
 const HUDSON_CTX = {};
 let syncing = false;
+
+function hudsonRelayBody(fields) {
+  const body = {
+    text: fields.text || "",
+    source: fields.source || "",
+    card: fields.card || "",
+    action: fields.action || "",
+    itemId: fields.itemId || "",
+    mode: fields.mode != null ? fields.mode : mode,
+    page: fields.page != null ? fields.page : page,
+    at: fields.at || new Date().toISOString()
+  };
+  if (HUDSON.url && HUDSON.key) {
+    body.webhook = HUDSON.url;
+    body.key = HUDSON.key;
+  }
+  return body;
+}
+async function postHudsonRelay(fields) {
+  return fetch(HUDSON_RELAY, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(hudsonRelayBody(fields))
+  });
+}
 
 async function relay(payload) {
   if (!CFG.on) return { ok: false, error: "not connected" };
@@ -641,10 +684,10 @@ function openHudsonAsk(btn) {
   box.innerHTML =
     `<div class="hudsonask-k">Ask Hudson about this</div>` +
     `<div class="hudsonask-row">` +
-      `<input id="hudsonaskin" type="text" placeholder="What do you want to know about this?" autocomplete="off">` +
+      `<input id="hudsonaskin" type="text" placeholder="What do you want to know about this?" autocomplete="off" enterkeyhint="send">` +
       `<button type="button" class="act" id="hudsonasksend">Send</button>` +
-      `<button type="button" class="act quiet" id="hudsonaskcancel">Cancel</button>` +
     `</div>` +
+    `<button type="button" class="act quiet hudsonask-x" id="hudsonaskcancel">Cancel</button>` +
     `<div class="hudsonask-note" id="hudsonasknote"></div>`;
   if (host) host.appendChild(box);
   else btn.insertAdjacentElement("afterend", box);
@@ -662,11 +705,14 @@ function openHudsonAsk(btn) {
       card: hudsonCardText(id),
       flashId: id,
       host
-    }).then(queued => {
-      if (queued) {
+    }).then(result => {
+      if (result === "sent") {
         closeHudsonAsk();
-        rowHudsonNote(id, host, "Sent. I'll answer in Hudson.", false);
-      } else if (!HUDSON.on) {
+        rowHudsonNote(id, host, "Sent.", false);
+      } else if (result === "saved") {
+        closeHudsonAsk();
+        rowHudsonNote(id, host, "Saved. I'll take it from here.", false);
+      } else {
         hudsonAskNote("Hudson is not connected on this device.", "bad");
       }
     });
@@ -685,44 +731,37 @@ async function askHudson(opts) {
     text,
     source: opts.source || "bar",
     card,
+    action: opts.action || "",
+    itemId: opts.itemId || "",
     mode,
     page,
-    at: new Date().toISOString()
+    at: new Date().toISOString(),
+    day: todayKey()
   };
-  HUDSON.saveAsk(payload);
+  const saved = HUDSON.saveAsk(payload);
   const tell = (msg, kind) => {
     askNote(msg, kind);
     if (flashId) flash(flashId, msg, kind === "bad");
     else if (opts.host) rowHudsonNote("", opts.host, msg, kind === "bad");
   };
-  if (!HUDSON.on) {
+  try {
+    const r = await postHudsonRelay(payload);
+    if (r.ok) {
+      tell("Sent.", "ok");
+      return "sent";
+    }
+    if (saved) {
+      tell("Saved. I'll take it from here.", "ok");
+      return "saved";
+    }
     tell("Hudson is not connected on this device.", "bad");
     return false;
-  }
-  tell("Sending to Hudson...");
-  try {
-    const r = await fetch(HUDSON_RELAY, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        webhook: HUDSON.url,
-        key: HUDSON.key,
-        text: payload.text,
-        source: payload.source,
-        card: payload.card,
-        mode: payload.mode,
-        page: payload.page,
-        at: payload.at
-      })
-    });
-    if (r.ok) {
-      tell("Sent. I'll answer in Hudson.", "ok");
-      return true;
-    }
-    tell("Hudson did not accept that. Saved on this device.", "bad");
-    return false;
   } catch (e) {
-    tell("Could not reach Hudson. Saved on this device.", "bad");
+    if (saved) {
+      tell("Saved. I'll take it from here.", "ok");
+      return "saved";
+    }
+    tell("Hudson is not connected on this device.", "bad");
     return false;
   }
 }
@@ -754,10 +793,10 @@ function openCarlitosAsk(btn) {
   box.innerHTML =
     `<div class="hudsonask-k">Tell Carlitos</div>` +
     `<div class="hudsonask-row">` +
-      `<input id="carlitosaskin" type="text" placeholder="What should change?" autocomplete="off">` +
+      `<input id="carlitosaskin" type="text" placeholder="What should change?" autocomplete="off" enterkeyhint="send">` +
       `<button type="button" class="act" id="carlitosasksend">Send</button>` +
-      `<button type="button" class="act quiet" id="carlitosaskcancel">Cancel</button>` +
     `</div>` +
+    `<button type="button" class="act quiet hudsonask-x" id="carlitosaskcancel">Cancel</button>` +
     `<div class="hudsonask-note" id="carlitosasknote"></div>`;
   if (host) host.appendChild(box);
   else btn.insertAdjacentElement("afterend", box);
@@ -774,14 +813,15 @@ function openCarlitosAsk(btn) {
       action: "change",
       itemId: id,
       card: hudsonCardText(id)
-    }).then(queued => {
-      if (queued) {
+    }).then(result => {
+      if (result === "sent") {
         closeCarlitosAsk();
-        rowHudsonNote(id, host, "Sent to Carlitos.", false);
-      } else if (!HUDSON.on) {
-        carlitosAskNote("Hudson is not connected on this device.", "bad");
+        rowHudsonNote(id, host, "Sent.", false);
+      } else if (result === "saved") {
+        closeCarlitosAsk();
+        rowHudsonNote(id, host, "Saved. I'll take it from here.", false);
       } else {
-        carlitosAskNote("Could not send. Saved on this device.", "bad");
+        carlitosAskNote("Hudson is not connected on this device.", "bad");
       }
     });
   };
@@ -803,30 +843,16 @@ async function sendCarlitosTask(opts) {
     itemId,
     mode,
     page,
-    at: new Date().toISOString()
+    at: new Date().toISOString(),
+    day: todayKey()
   };
-  HUDSON.saveAsk(payload);
-  if (!HUDSON.on) return false;
+  const saved = HUDSON.saveAsk(payload);
   try {
-    const r = await fetch(HUDSON_RELAY, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        webhook: HUDSON.url,
-        key: HUDSON.key,
-        text: payload.text,
-        source: payload.source,
-        action: payload.action,
-        card: payload.card,
-        itemId: payload.itemId,
-        mode: payload.mode,
-        page: payload.page,
-        at: payload.at
-      })
-    });
-    return r.ok;
+    const r = await postHudsonRelay(payload);
+    if (r.ok) return "sent";
+    return saved ? "saved" : false;
   } catch (e) {
-    return false;
+    return saved ? "saved" : false;
   }
 }
 
@@ -993,11 +1019,24 @@ const BIZ = {
     "<span class='tag t-ok'>Cleared</span> Food Corridor $2,922.75 banked Aug 12. Monica Clodius $405.94 paid. Square loan balance $5,457.84."
   ],
   waiting: [
-    "<strong>Ashley Colpaart</strong> on Ben's pick from the alternates. Sent Aug 13. 3 days.",
-    "<strong>Bernadette Ikhena / Stout</strong> on scheduling. Follow up Aug 14. 2 days.",
-    "<strong>Kurt Bonatz</strong> on the Poynton 11 executive Sept 16 proposal. Check in ready Aug 18.",
-    "<strong>Sean Donahue</strong> on packages and pricing, sent Aug 13. Nudge drafted.",
-    "<strong>Andria Wilson</strong> 14 days. <strong>Lauren Soules / LPC</strong>. <strong>Nezelia</strong> on Greenbelt times."
+    { id: "wait-bernadette",
+      html: "<strong>Bernadette Ikhena / Stout</strong> on scheduling. Follow up Aug 14. 2 days.",
+      act: [{ k: "done", label: "Clear it" }] },
+    { id: "wait-kurt",
+      html: "<strong>Kurt Bonatz</strong> on the Poynton 11 executive Sept 16 proposal. Check in ready Aug 18.",
+      act: [{ k: "done", label: "Already handled" }] },
+    { id: "wait-sean",
+      html: "<strong>Sean Donahue</strong> on packages and pricing, sent Aug 13. Nudge drafted.",
+      act: [{ k: "done", label: "Clear it" }] },
+    { id: "wait-andria",
+      html: "<strong>Andria Wilson</strong> 14 days.",
+      act: [{ k: "done", label: "Clear it" }] },
+    { id: "wait-lauren",
+      html: "<strong>Lauren Soules / LPC</strong>.",
+      act: [{ k: "done", label: "Already handled" }] },
+    { id: "wait-nezelia",
+      html: "<strong>Nezelia</strong> on Greenbelt times.",
+      act: [{ k: "done", label: "Clear it" }] }
   ],
   drafts: [
     "<span class='tag t-hot'>New</span> <strong>Sean Donahue first nudge</strong> <code>1a00bb730fa7c246</code>. Pricing link is 3 days old, cadence is due. Second nudge about Aug 21."
@@ -1062,7 +1101,7 @@ function bizSiren() {
   return "";
 }
 /* renders a list whose entries carry action buttons */
-function ulActs(arr) {
+function ulActs(arr, title) {
   const live = arr.filter(i => {
     const s = itemState(i);
     if (!s) return true;
@@ -1072,7 +1111,7 @@ function ulActs(arr) {
   });
   if (!live.length) return `<div class="zero">All of these are handled.<br>Rare. Enjoy it.</div>`;
   return "<ul>" + live.map(i => {
-    rememberHudson(i.id, "Then these", i.html);
+    rememberHudson(i.id, title || "", i.html);
     const acts = (i.act || []).map((a, n) =>
       `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}"
         data-act="${i.id}" data-n="${n}">${a.label}</button>`).join("")
@@ -1082,9 +1121,12 @@ function ulActs(arr) {
       <div class="flash" id="flash-${i.id}"></div></li>`;
   }).join("") + "</ul>";
 }
+function hiddenCount(arr) {
+  return arr.length - arr.filter(i => !itemState(i) || itemState(i).k === "snooze" && itemState(i).until <= todayKey()).length;
+}
 function bizThen() {
-  const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i) || itemState(i).k === "snooze" && itemState(i).until <= todayKey()).length;
-  return card("Then these", ulActs(BIZ.then),
+  const hidden = hiddenCount(BIZ.then);
+  return card("Then these", ulActs(BIZ.then, "Then these"),
     { wide: true, cls: "quiet", right: hidden > 0 ? `${hidden} cleared` : "" });
 }
 
@@ -1101,13 +1143,17 @@ function hudsonConnectCard(kind) {
        <div class="flash" id="flash-hudson"></div>`,
       { wide: true, cls: "connect", right: "connected" });
   }
-  return card("Ask Hudson",
-    `<p style="margin:0 0 13px">Hudson is a separate webhook from the Apps Script buttons. Paste the webhook URL and the sender key. Both stay on this device. Until then, asks are saved here and not sent.</p>
+  return card("Hudson (optional)",
+    `<p style="margin:0 0 13px">This phone can check off and send notes now. Connecting Hudson is optional for a faster reply. Paste a webhook URL and sender key if you want them on this device.</p>
      <input id="hudsonurl" placeholder="Hudson webhook URL" autocomplete="off">
      <input id="hudsonkey" placeholder="Hudson sender key" autocomplete="off">
-     <button type="button" class="act" id="hudsonsave">Connect Hudson</button>
+     <button type="button" class="act quiet" id="hudsonsave">Connect Hudson</button>
      <div class="flash" id="flash-hudson"></div>`,
-    { wide: true, cls: "connect", right: "not connected" });
+    { wide: true, cls: "connect", right: "optional" });
+}
+function hudsonPhoneNote() {
+  if (HUDSON.on) return "";
+  return `<div class="hudson-phone"><p>This phone can check off and send notes now. Connecting Hudson is optional for a faster reply.</p></div>`;
 }
 function bizSchedule() {
   const rows = BIZ.schedule.map(r => `<div class="row"><div class="time">${r[0]}</div><div class="what">${r[1]}</div></div>`).join("");
@@ -1115,7 +1161,11 @@ function bizSchedule() {
   return card("Schedule", body + hudsonAct("schedule", "Schedule", body));
 }
 function bizMoney() { return card("Money", ul(BIZ.money) + hudsonAct("money", "Money", ul(BIZ.money))); }
-function bizWaiting() { return card("Waiting on them", ul(BIZ.waiting) + hudsonAct("waiting", "Waiting on them", ul(BIZ.waiting))); }
+function bizWaiting() {
+  const hidden = hiddenCount(BIZ.waiting);
+  return card("Waiting on them", ulActs(BIZ.waiting, "Waiting on them"),
+    { right: hidden > 0 ? `${hidden} cleared` : "" });
+}
 function bizDrafts() { return card("Drafted, unsent", ul(BIZ.drafts) + hudsonAct("drafts", "Drafted, unsent", ul(BIZ.drafts)), { right: "SC@ is at 2" }); }
 function bizAged() { return card("Open 5 or more days", ul(BIZ.aged) + hudsonAct("aged", "Open 5 or more days", ul(BIZ.aged)), { wide: true, collapsed: true }); }
 function bizFacts() { return card("Facts from this run", ul(BIZ.facts) + hudsonAct("facts", "Facts from this run", ul(BIZ.facts)), { wide: true, collapsed: true }); }
@@ -1125,6 +1175,7 @@ function utilityBlock(html) {
 }
 const BIZVIEWS = {
   overview: () =>
+    hudsonPhoneNote() +
     (bizSiren() ? `<div class="stage">${bizSiren()}</div>` : "") +
     `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>` +
     utilityBlock(hudsonConnectCard("needed") + hudsonConnectCard("connected")),
@@ -1446,7 +1497,7 @@ function renderGreet() {
       : " · Zone " + currentZone().n + ", " + currentZone().name);
   const hudson = HUDSON.on
     ? `<div class="footline"><span class="dot on"></span>Hudson is connected.</div>`
-    : `<div class="footline"><span class="dot off"></span>Hudson is not connected. Asks stay on this device.</div>`;
+    : `<div class="footline"><span class="dot off"></span>This phone can check off and send notes. Hudson connect is optional.</div>`;
   el("#sidefoot").innerHTML = hudson;
   const askin = el("#askin");
   if (askin && document.activeElement !== askin) {
@@ -1490,24 +1541,25 @@ function flash(id, msg, bad) {
 }
 
 const ACT_INDEX = {};
-BIZ.then.forEach(i => ACT_INDEX[i.id] = i);
+BIZ.then.concat(BIZ.waiting).forEach(i => ACT_INDEX[i.id] = i);
 
 async function doAction(itemId, n) {
   const item = ACT_INDEX[itemId];
   if (!item) return;
   const a = item.act[n];
 
-  /* local-only verbs resolve instantly, no round trip needed */
+  /* hide first from this device; relay is best-effort and must not block */
   if (a.k === "done") {
+    const cardText = hudsonCardText(itemId);
+    setItemState(itemId, { k: "done", at: todayKey() });
+    render();
+    askNote("Cleared.", "ok");
     sendCarlitosTask({
       text: "Marked complete.",
       action: "done",
       itemId,
-      card: hudsonCardText(itemId)
+      card: cardText
     });
-    if (!HUDSON.on) askNote("Hudson is not connected on this device.", "bad");
-    setItemState(itemId, { k: "done", at: todayKey() });
-    render();
     return;
   }
   if (a.k === "drop")   { setItemState(itemId, { k: "drop", at: todayKey() }); render(); return; }
@@ -1558,7 +1610,7 @@ function wire() {
   const hc = view.querySelector("#hudsonclear");
   if (hc) hc.onclick = () => {
     HUDSON.clear();
-    askNote("Hudson is not connected. Asks stay on this device.", "bad");
+    askNote("Hudson disconnected. This phone can still check off and send notes.", "ok");
     render();
   };
 
@@ -1722,8 +1774,8 @@ el("#briefbtn").onclick = () => {
       askNote("Type an ask first.", "bad");
       return;
     }
-    askHudson({ text, source: "bar", card: "" }).then(() => {
-      if (HUDSON.on || text) inp.value = "";
+    askHudson({ text, source: "bar", card: "" }).then(result => {
+      if (result) inp.value = "";
     });
   };
   btn.onclick = send;
