@@ -571,12 +571,12 @@ async function askHudson(opts) {
   }
   tell("Sending to Hudson...");
   const body = JSON.stringify(Object.assign({ senderKey: HUDSON.key }, payload));
+  let queued = false;
   try {
-    let sent = false;
-    if (navigator.sendBeacon) {
-      sent = navigator.sendBeacon(HUDSON.url, new Blob([body], { type: "application/json" }));
+    if (typeof navigator.sendBeacon === "function") {
+      queued = navigator.sendBeacon(HUDSON.url, new Blob([body], { type: "text/plain;charset=utf-8" }));
     }
-    if (!sent) {
+    if (!queued) {
       await fetch(HUDSON.url, {
         method: "POST",
         mode: "no-cors",
@@ -584,11 +584,13 @@ async function askHudson(opts) {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body
       });
+      queued = true;
     }
-    tell("Sent to Hudson.", "ok");
   } catch (e) {
-    tell("Could not reach Hudson. Saved on this device.", "bad");
+    queued = false;
   }
+  if (queued) tell("Sent to Hudson.", "ok");
+  else tell("Could not reach Hudson. Saved on this device.", "bad");
 }
 
 /* item-level board state: done, snoozed, dropped */
