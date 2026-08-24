@@ -138,9 +138,35 @@ a{color:var(--berry)}
 .asknote.show{margin-top:8px}
 .asknote.bad{color:var(--berry)}
 .asknote.ok{color:var(--green)}
-.hudsonask{margin:10px 0 4px;max-width:540px}
-.hudsonask .askrow button.quiet{color:var(--muted)}
-.hudsonask .askrow button.quiet:hover{color:var(--ink)}
+.hudsonask{
+  margin:12px 0 6px;padding:12px 14px 14px 16px;max-width:560px;
+  background:var(--gold-soft);
+  border-left:3px solid var(--gold);
+}
+.hudsonask-k{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 8px;letter-spacing:.01em}
+.hudsonask-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hudsonask-row input{
+  flex:1 1 200px;min-width:0;
+  border:1px solid var(--ink);background:#fff;color:var(--ink);
+  padding:10px 12px;font-family:inherit;font-size:16px;border-radius:0}
+.hudsonask-row input:focus{outline:none;border-color:var(--ink)}
+.hudsonask .act{
+  flex:0 0 auto;border:1.5px solid var(--berry);background:var(--berry);color:#fff;
+  border-radius:8px;padding:8px 16px;font-size:12.5px;font-weight:700}
+.hudsonask .act:hover{background:var(--berry-deep);border-color:var(--berry-deep);color:#fff}
+.hudsonask .act.quiet{background:#fff;color:var(--ink);border-color:var(--line)}
+.hudsonask .act.quiet:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.after .hudsonask .act{padding:8px 16px;font-size:12.5px;border-width:1.5px;border-radius:8px}
+.after .hudsonask .act:not(.quiet){background:var(--berry);color:#fff;border-color:var(--berry)}
+.after .hudsonask .act:not(.quiet):hover{background:var(--berry-deep);border-color:var(--berry-deep);color:#fff}
+.hudsonask-note{display:none;margin-top:8px;font-size:13px;font-weight:600;line-height:1.4;color:var(--ink)}
+.hudsonask-note.show{display:block}
+.hudsonask-note.bad{color:var(--berry)}
+.hudsonask-note.ok{color:var(--green)}
+.hudson-rownote{background:var(--green-soft);color:var(--green);padding:9px 13px;
+  font-size:13px;font-weight:600;margin:9px 0 2px;display:none}
+.hudson-rownote.bad{background:var(--berry-soft);color:var(--berry)}
+.hudson-rownote.show{display:block}
 
 .grid{display:flex;flex-direction:column;gap:0;max-width:860px;align-items:stretch}
 .stage{padding:36px 0 8px}
@@ -562,6 +588,37 @@ function closeHudsonAsk() {
   const box = view.querySelector("#hudsonask");
   if (box) box.remove();
 }
+function hudsonAskHost(btn, id) {
+  const li = btn.closest("li");
+  if (li) return li;
+  const acts = btn.closest(".acts");
+  if (acts && acts.parentElement) return acts.parentElement;
+  const flashEl = id ? view.querySelector("#flash-" + id) : null;
+  if (flashEl && flashEl.parentElement) return flashEl.parentElement;
+  return acts || btn.parentElement;
+}
+function hudsonAskNote(msg, kind) {
+  const n = view.querySelector("#hudsonasknote");
+  if (!n) return;
+  n.textContent = msg || "";
+  n.className = "hudsonask-note" + (msg ? " show" : "") + (kind === "bad" ? " bad" : kind === "ok" ? " ok" : "");
+}
+function rowHudsonNote(id, host, msg, bad) {
+  const flashEl = id ? view.querySelector("#flash-" + id) : null;
+  if (flashEl) {
+    flash(id, msg, bad);
+    return;
+  }
+  if (!host) return;
+  let note = host.querySelector(":scope > .hudson-rownote");
+  if (!note) {
+    note = document.createElement("div");
+    note.className = "hudson-rownote";
+    host.appendChild(note);
+  }
+  note.textContent = msg || "";
+  note.className = "hudson-rownote" + (msg ? " show" : "") + (bad ? " bad" : "");
+}
 function openHudsonAsk(btn) {
   const id = btn.dataset.hudson;
   const existing = view.querySelector("#hudsonask");
@@ -570,37 +627,41 @@ function openHudsonAsk(btn) {
     return;
   }
   if (existing) existing.remove();
+  const host = hudsonAskHost(btn, id);
   const box = document.createElement("div");
   box.id = "hudsonask";
   box.className = "hudsonask";
   box.dataset.for = id;
   box.innerHTML =
-    `<div class="askrow">` +
+    `<div class="hudsonask-k">Ask Hudson about this</div>` +
+    `<div class="hudsonask-row">` +
       `<input id="hudsonaskin" type="text" placeholder="What do you want to know about this?" autocomplete="off">` +
-      `<button type="button" id="hudsonasksend">Send</button>` +
-      `<button type="button" id="hudsonaskcancel" class="quiet">Cancel</button>` +
-    `</div>`;
-  const flashEl = view.querySelector("#flash-" + id);
-  const acts = btn.closest(".acts");
-  if (flashEl) flashEl.insertAdjacentElement("beforebegin", box);
-  else if (acts) acts.insertAdjacentElement("afterend", box);
+      `<button type="button" class="act" id="hudsonasksend">Send</button>` +
+      `<button type="button" class="act quiet" id="hudsonaskcancel">Cancel</button>` +
+    `</div>` +
+    `<div class="hudsonask-note" id="hudsonasknote"></div>`;
+  if (host) host.appendChild(box);
   else btn.insertAdjacentElement("afterend", box);
   const inp = box.querySelector("#hudsonaskin");
   const send = () => {
     const text = inp.value.trim();
     if (!text) {
-      flash(id, "Type a question first.", true);
+      hudsonAskNote("Type a question first.", "bad");
       return;
     }
+    hudsonAskNote("");
     askHudson({
       text,
       source: "card",
       card: hudsonCardText(id),
-      flashId: id
+      flashId: id,
+      host
     }).then(queued => {
       if (queued) {
-        inp.value = "";
         closeHudsonAsk();
+        rowHudsonNote(id, host, "Sent. I'll answer in Hudson.", false);
+      } else if (!HUDSON.on) {
+        hudsonAskNote("Hudson is not connected on this device.", "bad");
       }
     });
   };
@@ -615,6 +676,7 @@ async function askHudson(opts) {
   const flashId = opts.flashId || "";
   if (!text) return false;
   const payload = {
+    senderKey: HUDSON.key,
     text,
     source: opts.source || "bar",
     card,
@@ -626,20 +688,22 @@ async function askHudson(opts) {
   const tell = (msg, kind) => {
     askNote(msg, kind);
     if (flashId) flash(flashId, msg, kind === "bad");
+    else if (opts.host) rowHudsonNote("", opts.host, msg, kind === "bad");
   };
   if (!HUDSON.on) {
-    tell("Hudson is not connected yet. Saved on this device.", "bad");
+    tell("Hudson is not connected on this device.", "bad");
     return false;
   }
   tell("Sending to Hudson...");
-  const body = JSON.stringify(Object.assign({ senderKey: HUDSON.key }, payload));
+  const dest = HUDSON.url + (HUDSON.url.indexOf("?") >= 0 ? "&" : "?") + "senderKey=" + encodeURIComponent(HUDSON.key);
+  const body = JSON.stringify(payload);
   let queued = false;
   try {
     if (typeof navigator.sendBeacon === "function") {
-      queued = navigator.sendBeacon(HUDSON.url, new Blob([body], { type: "text/plain;charset=utf-8" }));
+      queued = navigator.sendBeacon(dest, new Blob([body], { type: "text/plain;charset=utf-8" }));
     }
     if (!queued) {
-      await fetch(HUDSON.url, {
+      await fetch(dest, {
         method: "POST",
         mode: "no-cors",
         keepalive: true,
@@ -652,7 +716,7 @@ async function askHudson(opts) {
     queued = false;
   }
   if (queued) {
-    tell("Sent to Hudson.", "ok");
+    tell("Sent. I'll answer in Hudson.", "ok");
     return true;
   }
   tell("Could not reach Hudson. Saved on this device.", "bad");
