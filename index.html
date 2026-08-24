@@ -16,20 +16,19 @@
 <style>
 :root{
   --ink:#302F2F; --white:#fff; --berry:#A31F61; --gold:#CC9F53;
-  --paper:#FAF8F5; --line:#E6E0DD; --muted:#7A7370;
+  --paper:#FAF8F5; --line:#E4DED8; --muted:#7A7370;
   --berry-soft:#FBE6EF; --gold-soft:#F8EFDD; --green:#2F6B41; --green-soft:#E6F2E9;
-  --sidebar:268px; --radius:16px; --berry-deep:#8A1A53;
+  --sidebar:240px; --radius:10px; --berry-deep:#8A1A53;
+  --metal:#3A3939; --hair:rgba(255,255,255,.08);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 html{background:var(--ink)}
 body{
-  background:
-    radial-gradient(1200px 420px at 72% -8%, rgba(163,31,97,.045), transparent 58%),
-    var(--paper);
+  background:var(--paper);
   color:var(--ink);
   font-family:"Nunito Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-weight:300; line-height:1.55; font-size:15px;
+  font-weight:400; line-height:1.5; font-size:15px;
   -webkit-font-smoothing:antialiased;
 }
 button{font-family:inherit;cursor:pointer}
@@ -38,91 +37,133 @@ a{color:var(--berry)}
 /* ---------- LAYOUT ---------- */
 .app{display:flex;min-height:100vh}
 
-/* ---------- SIDEBAR ---------- */
+/* ---------- SIDEBAR: Linear chrome, machined not flat ---------- */
 .sidebar{
-  width:var(--sidebar);flex:0 0 var(--sidebar);background:var(--ink);color:#fff;
-  padding:28px 18px 26px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  width:var(--sidebar);flex:0 0 var(--sidebar);color:#fff;
+  padding:22px 14px 18px;position:sticky;top:0;height:100vh;overflow-y:auto;
   display:flex;flex-direction:column;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055) 0%, transparent 56px),
+    linear-gradient(90deg, #2a2929 0%, var(--ink) 12%, #2d2c2c 100%);
+  border-right:1px solid rgba(0,0,0,.55);
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.07),
+    inset 0 1px 0 rgba(255,255,255,.1),
+    inset -1px 0 0 rgba(255,255,255,.03);
 }
-.brand{display:flex;align-items:center;gap:13px;padding:0 8px 22px;margin-bottom:4px;
-  border-bottom:1px solid rgba(255,255,255,.1)}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 8px 18px;margin:0 2px 2px;
+  border-bottom:1px solid var(--hair);
+  box-shadow:0 1px 0 rgba(0,0,0,.28)}
 .brand-mark{
-  width:42px;height:42px;border-radius:50%;background:var(--berry);color:#fff;
-  display:grid;place-items:center;font-weight:800;font-size:14px;letter-spacing:.04em;
-  flex:0 0 auto;box-shadow:0 0 0 1.5px rgba(204,159,83,.55), 0 0 0 5px rgba(163,31,97,.18);
+  width:30px;height:30px;border-radius:8px;color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:11px;letter-spacing:.06em;
+  flex:0 0 auto;
+  background:linear-gradient(180deg, #B52672 0%, var(--berry) 46%, var(--berry-deep) 100%);
+  box-shadow:
+    0 0 0 1px rgba(204,159,83,.42),
+    inset 0 1px 0 rgba(255,255,255,.32),
+    inset 0 -1px 0 rgba(0,0,0,.28);
 }
-.brand-name{font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;line-height:1.25}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.42);letter-spacing:.03em;margin-top:3px;font-weight:400}
+.brand-name{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1.2}
+.brand-sub{font-size:10.5px;color:rgba(255,255,255,.38);letter-spacing:.02em;margin-top:3px;font-weight:400}
 
-.modeswitch{display:flex;background:rgba(255,255,255,.07);border-radius:999px;padding:3px;margin:18px 4px 22px;gap:0}
-.modeswitch button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.55);
-  padding:9px 8px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;transition:.18s}
-.modeswitch button.on{background:var(--berry);color:#fff}
+.modeswitch{
+  display:flex;margin:16px 4px 18px;padding:2px;gap:0;border-radius:8px;
+  background:rgba(0,0,0,.28);
+  box-shadow:inset 0 0 0 1px var(--hair), inset 0 1px 0 rgba(0,0,0,.35);
+}
+.modeswitch button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.46);
+  padding:7px 6px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase}
+.modeswitch button.on{
+  background:linear-gradient(180deg, #B52672, var(--berry) 55%, var(--berry-deep));
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 1px 0 rgba(0,0,0,.25);
+}
 
-.navlist{list-style:none;margin:0;padding:0;flex:1}
-.navlist li{margin-bottom:4px}
-.navlist button{width:100%;display:flex;align-items:center;gap:12px;border:0;background:transparent;
-  color:rgba(255,255,255,.68);padding:11px 14px;border-radius:11px;font-size:14.5px;
-  font-weight:400;text-align:left;transition:.16s}
-.navlist button:hover{background:rgba(255,255,255,.06);color:#fff}
-.navlist button.on{background:var(--berry);color:#fff;font-weight:700}
-.navlist .ico{width:18px;text-align:center;font-size:13px;flex:0 0 auto;opacity:.88;letter-spacing:0}
-.navlist .badge{margin-left:auto;background:var(--gold);color:var(--ink);font-size:10px;
-  font-weight:800;border-radius:99px;padding:2px 7px;min-width:20px;text-align:center}
-.navlist button.on .badge{background:#fff;color:var(--berry)}
+.navlist{list-style:none;margin:0;padding:0 2px;flex:1}
+.navlist li{margin-bottom:2px}
+.navlist button{width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;
+  color:rgba(255,255,255,.58);padding:8px 10px;border-radius:7px;font-size:13.5px;
+  font-weight:400;text-align:left}
+.navlist button:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.92)}
+.navlist button.on{
+  background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+  color:#fff;font-weight:600;
+  box-shadow:inset 0 0 0 1px var(--hair), inset 2px 0 0 var(--berry);
+}
+.navlist .ico{width:16px;text-align:center;font-size:12px;flex:0 0 auto;opacity:.7;letter-spacing:0}
+.navlist button.on .ico{opacity:1}
+.navlist .badge{margin-left:auto;background:transparent;color:var(--gold);font-size:10px;
+  font-weight:800;border-radius:99px;padding:1px 0;min-width:16px;text-align:right;
+  box-shadow:none}
+.navlist button.on .badge{background:transparent;color:var(--gold)}
 
-.sidefoot{margin-top:auto;padding:16px 12px 0;border-top:1px solid rgba(255,255,255,.1);
-  font-size:11.5px;color:rgba(255,255,255,.38);line-height:1.55}
+.sidefoot{margin-top:auto;padding:14px 8px 2px;border-top:1px solid var(--hair);
+  box-shadow:0 -1px 0 rgba(0,0,0,.28);
+  font-size:11px;color:rgba(255,255,255,.34);line-height:1.5}
 .sidefoot + .sidefoot,.sidefoot .footline + .footline{margin-top:8px}
 
-/* ---------- MAIN ---------- */
-.main{flex:1;min-width:0;padding:36px 40px 72px}
-.greet{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
-  padding-bottom:18px;margin-bottom:0;flex-wrap:wrap}
-.greet h1{margin:0;font-size:28px;font-weight:300;letter-spacing:-.01em}
-.greet h1 b{font-weight:800}
-.greet .date{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:.01em}
-.brief{background:var(--berry);color:#fff;border:0;border-radius:11px;padding:12px 22px;
-  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
-.brief:hover{background:var(--berry-deep)}
+/* ---------- MAIN: one focused work surface ---------- */
+.main{flex:1;min-width:0;padding:32px 48px 88px}
+.workhead{max-width:860px;padding-bottom:22px;margin-bottom:8px;
+  border-bottom:1px solid var(--line)}
+.crumb{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px}
+.worktop{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.workhead h1{margin:0;font-size:30px;font-weight:300;letter-spacing:-.025em;line-height:1.15}
+.workhead h1 b{font-weight:800}
+.workhead .date{color:var(--muted);font-size:13px;margin-top:8px;letter-spacing:.01em;max-width:62ch;line-height:1.45}
+.brief{
+  background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:8px;
+  padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  white-space:nowrap;margin-top:2px}
+.brief:hover{border-color:var(--berry);color:var(--berry)}
 
-.askbar{padding-bottom:22px;margin-bottom:28px;border-bottom:1px solid var(--line)}
-.askbar .k{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--gold);margin-bottom:10px}
-.askrow{display:flex;gap:9px}
-.askrow input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;
-  padding:13px 15px;font-family:inherit;font-size:15.5px;background:#fff;color:var(--ink)}
-.askrow input:focus{outline:none;border-color:var(--berry)}
-.askrow button{border:0;background:var(--berry);color:#fff;border-radius:10px;padding:0 22px;
-  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto}
-.askrow button:hover{background:var(--berry-deep)}
+.askbar{margin-top:18px}
+.askbar .k{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px}
+.askrow{display:flex;gap:8px;align-items:stretch}
+.askrow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;
+  padding:11px 13px;font-family:inherit;font-size:15px;background:#fff;color:var(--ink)}
+.askrow input:focus{outline:none;border-color:var(--ink)}
+.askrow button{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:0 18px;
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;flex:0 0 auto}
+.askrow button:hover{background:var(--berry)}
 .asknote{font-size:12.5px;color:var(--muted);margin-top:0;min-height:0;line-height:1.45}
-.asknote.show{margin-top:9px}
+.asknote.show{margin-top:8px}
 .asknote.bad{color:var(--berry)}
 .asknote.ok{color:var(--green)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;align-items:start}
-.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px}
-.card.wide{grid-column:1/-1}
-.card h2{margin:0 0 16px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--berry);border-bottom:1px solid var(--line);padding-bottom:11px;
-  display:flex;align-items:center;gap:9px;justify-content:space-between}
-.card h2 .rt{font-size:11px;letter-spacing:.04em;color:var(--muted);font-weight:600;text-transform:none}
+.grid{display:flex;flex-direction:column;gap:0;max-width:860px;align-items:stretch}
+.stage{padding:28px 0 8px}
+.after{padding:8px 0 0;display:flex;flex-direction:column;gap:0}
+.quietpair{display:grid;grid-template-columns:1fr 1fr;gap:0 36px}
+.utility{padding:36px 0 0;margin-top:12px;border-top:1px solid var(--line)}
+
+.card{background:transparent;border:0;border-radius:0;padding:20px 0 22px;
+  border-bottom:1px solid var(--line)}
+.card.wide{grid-column:auto}
+.card h2{margin:0 0 14px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);border-bottom:0;padding-bottom:0;
+  display:flex;align-items:center;gap:10px;justify-content:space-between}
+.card h2 .rt{font-size:11px;letter-spacing:.02em;color:var(--muted);font-weight:600;text-transform:none}
+.card h2 .kicker{display:block;font-size:11px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--berry);margin-bottom:8px}
 .card ul{margin:0;padding-left:18px}
-.card li{margin-bottom:9px}
+.card li{margin-bottom:10px}
 .card li:last-child{margin-bottom:0}
 .big{font-weight:600}
-.note{color:var(--muted);font-size:13px;margin-top:11px}
+.note{color:var(--muted);font-size:13px;margin-top:12px}
 .sub{display:block;color:var(--muted);font-size:12.5px}
 
-.row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.row{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:none}
-.row .time{min-width:94px;font-weight:600;font-size:13.5px}
+.row .time{min-width:92px;font-weight:600;font-size:13px}
 .row .what{flex:1}
 
 .tag{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
-  padding:2px 8px;border-radius:99px;font-weight:700;vertical-align:middle}
+  padding:2px 7px;border-radius:99px;font-weight:700;vertical-align:middle}
 .t-hot{background:var(--berry-soft);color:var(--berry)}
 .t-money{background:var(--gold-soft);color:#8A6420}
 .t-old{background:#F0EEED;color:var(--muted)}
@@ -130,22 +171,45 @@ a{color:var(--berry)}
 .t-dead{background:#EFE9EE;color:#6D0F3F}
 code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 
-.siren{background:var(--berry);color:#fff;border:0;padding:26px 28px}
-.siren h2{color:#fff;border-bottom-color:rgba(255,255,255,.22);letter-spacing:.12em}
-.siren code{background:rgba(255,255,255,.16);color:#fff}
-.siren li{margin-bottom:12px}
-.alarm{background:#FFF8FA;border:1px solid #F3D7E4;border-left:5px solid var(--berry)}
+/* The one loud surface. Everything else stays quiet. */
+.card.focus{padding:8px 0 32px;border-bottom:0}
+.card.focus h2{
+  display:block;color:var(--ink);font-size:28px;line-height:1.2;font-weight:700;
+  letter-spacing:-.025em;text-transform:none;margin:0 0 18px}
+.card.focus h2 .kicker{margin-bottom:10px}
+.card.focus h2 .rt{display:none}
+.card.focus .card-body{font-size:16px;line-height:1.55;max-width:62ch}
+.card.focus .acts{margin-top:20px}
+.card.focus .act:not(.quiet){background:var(--berry);color:#fff;border-color:var(--berry);padding:10px 16px}
+.card.focus .act:not(.quiet):hover{background:var(--berry-deep);border-color:var(--berry-deep)}
+.card.focus .top3{padding:14px 2px}
+.card.focus .top3 input{font-size:18px;padding:8px 2px}
+.card.hero{position:relative;padding:8px 0 28px;border-bottom:0}
+.card.hero > h2{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.after .card{font-size:14.5px}
+.after .act:not(.quiet){border-color:var(--line);color:var(--ink)}
+.after .act:not(.quiet):hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card.handled{padding:18px 0}
+.card.handled .zero{text-align:left;padding:0;color:var(--muted)}
+.siren{background:transparent;color:var(--ink);border:0;padding:8px 0 32px}
+.siren h2{color:var(--ink);border:0}
+.siren code{background:#F2EFED;color:var(--ink)}
+.alarm{background:transparent;border:0}
 .days{font-weight:700;color:var(--berry)}
+.card.quiet h2,.after > .card h2{color:var(--muted)}
 
 /* ---------- 6G ---------- */
 .homehero{display:grid;grid-template-columns:auto 1fr;gap:18px 22px;align-items:start}
 .homeunit{
-  width:72px;height:72px;border-radius:50%;background:var(--ink);color:#fff;
-  display:grid;place-items:center;font-weight:800;letter-spacing:.04em;font-size:15px;
-  box-shadow:0 0 0 1.5px rgba(204,159,83,.5), 0 0 0 6px rgba(48,47,47,.06);
+  width:64px;height:64px;border-radius:10px;background:var(--ink);color:#fff;
+  display:grid;place-items:center;font-weight:800;letter-spacing:.04em;font-size:14px;
+  box-shadow:
+    0 0 0 1px rgba(204,159,83,.45),
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -1px 0 rgba(0,0,0,.35);
 }
 .homekicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:800}
-.homename{font-size:22px;font-weight:700;margin:4px 0 6px;letter-spacing:-.015em;line-height:1.2}
+.homename{font-size:26px;font-weight:700;margin:4px 0 8px;letter-spacing:-.025em;line-height:1.15}
 .weekrow{display:grid;grid-template-columns:92px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
 .weekrow:last-child{border-bottom:none}
 .weekrow .when{font-weight:700;font-size:13px;letter-spacing:.01em}
@@ -169,16 +233,17 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 .streak{display:inline-flex;align-items:center;gap:6px;background:var(--gold-soft);color:#8A6420;
   border-radius:99px;padding:3px 11px;font-size:12px;font-weight:700}
 
-.zonehead{grid-column:1/-1;background:var(--ink);color:#fff;border-radius:12px;padding:19px 22px;margin:0}
+.zonehead{background:var(--ink);color:#fff;border-radius:10px;padding:20px 22px;margin:20px 0 8px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1), inset 0 -1px 0 rgba(0,0,0,.35)}
 .zonehead .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .zonehead .z{font-size:22px;font-weight:700;margin:5px 0 3px;line-height:1.25}
 .zonehead .r{font-size:13px;color:rgba(255,255,255,.62)}
 .zonepips{display:flex;gap:6px;margin-top:14px}
-.zonepips span{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.18)}
+.zonepips span{flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.18)}
 .zonepips span.on{background:var(--gold)}
 
-.wide{grid-column:1/-1}
-.hotspot{background:var(--berry-soft);border:1px solid #F2CFDF;border-radius:12px;padding:17px 20px}
+.wide{display:block}
+.hotspot{background:transparent;border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .hotspot .h{font-weight:700;color:var(--berry);font-size:14px;margin-bottom:5px}
 .timer{font-variant-numeric:tabular-nums;font-size:28px;font-weight:700;color:var(--berry);letter-spacing:.02em}
 .tbtn{border:1px solid var(--berry);background:#fff;color:var(--berry);border-radius:8px;
@@ -242,8 +307,6 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 .act.quiet{border-color:var(--line);color:var(--muted)}
 .act.quiet:hover{background:var(--muted);color:#fff;border-color:var(--muted)}
 .act[disabled]{opacity:.5;pointer-events:none}
-.siren .act{border-color:#fff;color:#fff;background:transparent}
-.siren .act:hover{background:#fff;color:var(--berry)}
 .itemdone{opacity:.45}
 .itemdone .big{text-decoration:line-through}
 .flash{background:var(--green-soft);color:var(--green);border-radius:8px;padding:9px 13px;
@@ -251,12 +314,12 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 .flash.bad{background:var(--berry-soft);color:var(--berry)}
 .flash.show{display:block}
 
-.connect{background:var(--gold-soft);border:1px solid #E8D3A8}
-.connect h2{color:#8A6420;border-bottom-color:#E8D3A8}
-.connect input{width:100%;border:1.5px solid #E0CDA6;border-radius:9px;padding:11px 13px;
-  font-family:inherit;font-size:14px;margin-bottom:9px;background:#fff}
-.connect input:focus{outline:none;border-color:var(--gold)}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:7px}
+.connect{background:transparent;border:0}
+.connect h2{color:var(--muted);border:0}
+.connect input{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  font-family:inherit;font-size:14px;margin-bottom:8px;background:#fff}
+.connect input:focus{outline:none;border-color:var(--ink)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:7px}
 .dot.on{background:var(--green)}
 .dot.off{background:var(--berry)}
 
@@ -266,28 +329,42 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
   body{font-size:15.5px}
   .app{display:block}
   .sidebar{display:none}
-  .main{padding:18px 16px 104px}
-  .greet{padding-top:8px;margin-bottom:0}
-  .greet h1{font-size:22px}
+  .main{padding:16px 18px 108px}
+  .workhead{padding-top:6px;padding-bottom:16px}
+  .workhead h1{font-size:24px}
   .brief{display:none}
-  .askbar{margin-bottom:20px;padding-bottom:18px}
-  .grid{grid-template-columns:1fr;gap:16px}
-  .card{padding:18px 18px}
-  .siren{padding:20px 18px}
+  .askbar{margin-top:14px}
+  .grid,.stage,.after,.utility{max-width:none}
+  .quietpair{grid-template-columns:1fr}
+  .card{padding:16px 0}
+  .card.focus{padding:6px 0 22px}
+  .card.focus h2{font-size:22px}
+  .siren{padding:6px 0 22px}
   .homehero{grid-template-columns:1fr}
-  .homeunit{width:58px;height:58px;font-size:13px}
+  .homeunit{width:52px;height:52px;font-size:13px}
   .mobar{
-    display:block;position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--ink);
-    padding:7px 6px calc(7px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.1)}
+    display:block;position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.06), transparent 18px),
+      var(--ink);
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    border-top:1px solid rgba(0,0,0,.5);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
   .mobar .mrow{display:flex}
-  .mobar button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.55);
-    padding:7px 1px;font-size:9.5px;font-weight:700;letter-spacing:.02em;
-    display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:9px}
-  .mobar button .ico{font-size:18px;line-height:1}
-  .mobar button.on{color:#fff;background:var(--berry)}
-  .mtop{display:flex;background:rgba(255,255,255,.08);border-radius:9px;padding:3px;gap:3px;margin:0 4px 6px}
+  .mobar button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.5);
+    padding:6px 1px;font-size:9.5px;font-weight:700;letter-spacing:.02em;
+    display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:7px}
+  .mobar button .ico{font-size:16px;line-height:1}
+  .mobar button.on{
+    color:#fff;
+    background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+    box-shadow:inset 0 0 0 1px var(--hair)}
+  .mtop{display:flex;background:rgba(0,0,0,.28);border-radius:8px;padding:2px;gap:2px;margin:0 4px 6px;
+    box-shadow:inset 0 0 0 1px var(--hair)}
   .mtop button{flex:1;flex-direction:row;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px}
-  .mtop button.on{background:var(--berry);color:#fff}
+  .mtop button.on{
+    background:linear-gradient(180deg, #B52672, var(--berry));
+    color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
   .collapsible .card-body{display:none}
   .collapsible.open .card-body{display:block}
   .collapsible h2{cursor:pointer}
@@ -308,7 +385,7 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
     <div class="brand">
       <div class="brand-mark">SC</div>
       <div>
-        <div class="brand-name">Command<br>Center</div>
+        <div class="brand-name">Command Center</div>
         <div class="brand-sub">suzannecovert.com</div>
       </div>
     </div>
@@ -325,21 +402,24 @@ code{background:#F2EFED;padding:1px 5px;border-radius:4px;font-size:12px}
 
   <!-- ================= MAIN ================= -->
   <main class="main">
-    <div class="greet">
-      <div>
-        <h1 id="greetline">Good morning, <b>Suzanne</b></h1>
-        <div class="date" id="greetdate"></div>
+    <header class="workhead">
+      <div class="crumb" id="crumb">Command Center</div>
+      <div class="worktop">
+        <div>
+          <h1 id="greetline">Good morning, <b>Suzanne</b></h1>
+          <div class="date" id="greetdate"></div>
+        </div>
+        <button class="brief" id="briefbtn">Daily Briefing</button>
       </div>
-      <button class="brief" id="briefbtn">Daily Briefing</button>
-    </div>
-    <div class="askbar">
-      <div class="k">Ask Hudson</div>
-      <div class="askrow">
-        <input id="askin" placeholder="Pull up the Vilcek email" autocomplete="off">
-        <button type="button" id="askbtn">Ask</button>
+      <div class="askbar">
+        <div class="k">Ask Hudson</div>
+        <div class="askrow">
+          <input id="askin" placeholder="Pull up the Vilcek email" autocomplete="off">
+          <button type="button" id="askbtn">Ask</button>
+        </div>
+        <div class="asknote" id="asknote"></div>
       </div>
-      <div class="asknote" id="asknote"></div>
-    </div>
+    </header>
     <div class="grid" id="view"></div>
   </main>
 </div>
@@ -780,7 +860,8 @@ function card(title, bodyHTML, opts) {
   const extra = opts.cls ? " " + opts.cls : "";
   const coll = opts.collapsed ? " collapsible" : "";
   const rt = opts.right ? `<span class="rt">${opts.right}</span>` : "";
-  return `<section class="card${wide}${extra}${coll}"><h2>${title}${rt}</h2><div class="card-body">${bodyHTML}</div></section>`;
+  const kicker = opts.kicker ? `<span class="kicker">${opts.kicker}</span>` : "";
+  return `<section class="card${wide}${extra}${coll}"><h2>${kicker}${title}${rt}</h2><div class="card-body">${bodyHTML}</div></section>`;
 }
 const ul = arr => "<ul><li>" + arr.join("</li><li>") + "</li></ul>";
 
@@ -797,16 +878,16 @@ const SIREN_ITEM = {
 function bizSiren() {
   const s = itemState(SIREN_ITEM.id);
   if (s && (s.k === "done" || s.k === "drop")) {
-    return card("Vilcek referral", `<div class="zero" style="color:#fff">Handled. Good.</div>`,
-      { wide: true, cls: "siren" });
+    return card("Vilcek referral", `<div class="zero">Handled. Good.</div>`,
+      { wide: true, cls: "handled quiet" });
   }
   rememberHudson(SIREN_ITEM.id, BIZ.siren.title, BIZ.siren.items.join(" "));
   const acts = SIREN_ITEM.act.map((a, n) =>
-    `<button class="act" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("")
-    + `<button type="button" class="act" data-hudson="${SIREN_ITEM.id}">Ask Hudson</button>`;
+    `<button class="act${a.k === "done" || a.k === "drop" || a.k === "snooze" ? " quiet" : ""}" data-act="${SIREN_ITEM.id}" data-n="${n}">${a.label}</button>`).join("")
+    + `<button type="button" class="act quiet" data-hudson="${SIREN_ITEM.id}">Ask Hudson</button>`;
   return card(BIZ.siren.title,
     ul(BIZ.siren.items) + `<div class="acts">${acts}</div><div class="flash" id="flash-${SIREN_ITEM.id}"></div>`,
-    { wide: true, cls: "siren" });
+    { wide: true, cls: "focus", kicker: "Do this now" });
 }
 /* renders a list whose entries carry action buttons */
 function ulActs(arr) {
@@ -832,7 +913,7 @@ function ulActs(arr) {
 function bizThen() {
   const hidden = BIZ.then.length - BIZ.then.filter(i => !itemState(i.id) || itemState(i.id).k === "snooze" && itemState(i.id).until <= todayKey()).length;
   return card("Then these", ulActs(BIZ.then),
-    { wide: true, cls: "alarm", right: hidden > 0 ? `${hidden} cleared` : "" });
+    { wide: true, cls: "quiet", right: hidden > 0 ? `${hidden} cleared` : "" });
 }
 
 function connectCard() {
@@ -875,12 +956,18 @@ function bizAged() { return card("Open 5 or more days", ul(BIZ.aged) + hudsonAct
 function bizPrep() { return card(BIZ.prep.title, BIZ.prep.html + hudsonAct("prep", BIZ.prep.title, BIZ.prep.html), { wide: true, collapsed: true }); }
 function bizFacts() { return card("Facts from this run", ul(BIZ.facts) + hudsonAct("facts", "Facts from this run", ul(BIZ.facts)), { wide: true, collapsed: true }); }
 
+function utilityBlock(html) {
+  return html ? `<div class="utility">${html}</div>` : "";
+}
 const BIZVIEWS = {
-  overview: () => connectCard() + hudsonConnectCard("needed") + bizSiren() + bizThen() + bizSchedule() + bizMoney() + bizPrep() + bizWaiting() + bizDrafts() + bizAged() + bizFacts() + hudsonConnectCard("connected"),
-  schedule: () => bizSchedule() + bizPrep(),
-  money: () => bizMoney() + bizWaiting(),
-  followups: () => bizDrafts() + bizWaiting() + bizThen(),
-  loose: () => bizAged() + bizFacts()
+  overview: () =>
+    `<div class="stage">${bizSiren()}</div>` +
+    `<div class="after">${bizThen()}<div class="quietpair">${bizSchedule()}${bizMoney()}</div>${bizPrep()}${bizWaiting()}${bizDrafts()}${bizAged()}${bizFacts()}</div>` +
+    utilityBlock(connectCard() + hudsonConnectCard("needed") + hudsonConnectCard("connected")),
+  schedule: () => `<div class="after">${bizSchedule()}${bizPrep()}</div>`,
+  money: () => `<div class="after">${bizMoney()}${bizWaiting()}</div>`,
+  followups: () => `<div class="after">${bizDrafts()}${bizWaiting()}${bizThen()}</div>`,
+  loose: () => `<div class="after">${bizAged()}${bizFacts()}</div>`
 };
 
 /* ---------------- PERSONAL: FLYLADY ---------------- */
@@ -948,10 +1035,10 @@ function flyladyView() {
   const note = `<div class="note" style="margin:0">
       <strong>Why these zones look different from stock FlyLady.</strong> FlyLady's zones are a deep cleaning system for people who clean their own house. Your maid comes twice a week, so mopping and dusting are already handled. These zones are <strong>decluttering</strong> zones instead, which is the part no maid will ever do for you. Fifteen minutes a day, one zone a week.</div>`;
 
-  return zhead
+  return `<div class="stage">${zhead}</div><div class="after">`
     + card("This week's zone, 15 minutes a day",
         `<div class="bar"><i style="width:${zpct}%"></i></div>${ztasks}${note}`,
-        { wide: true, right: `${zdone} of ${z.tasks.length}` })
+        { wide: true, cls: "quiet", right: `${zdone} of ${z.tasks.length}` })
     + `<div class="wide">${hotspot}</div>`
     + routineCard("morning", "Morning routine", MORNING)
     + routineCard("evening", "Before bed routine", EVENING)
@@ -962,7 +1049,8 @@ function flyladyView() {
         <li><strong>Maid comes ${MAID_DAYS.join(" and ")}.</strong> Run maid day prep <strong>${prepNights.join(" and ")} night</strong>, not the morning of.</li>
         <li><strong>Zone changes weekly, automatically.</strong> You never set it.</li>
         <li><strong>Missed a day.</strong> Nothing happens. Start where you are, today counts.</li>
-      </ul>`);
+      </ul>`, { cls: "quiet" })
+    + `</div>`;
 }
 
 /* ---------------- PERSONAL: TODAY ---------------- */
@@ -996,7 +1084,7 @@ function todayView() {
       <li>ACL Weekend One layaway auto charges <strong>tomorrow, Aug 17</strong>.</li>
     </ul>`;
   const bizNudge = card("From the business side",
-    bizNudgeHtml + hudsonAct("today-biz", "From the business side", bizNudgeHtml), { right: "read only" });
+    bizNudgeHtml + hudsonAct("today-biz", "From the business side", bizNudgeHtml), { cls: "quiet", right: "read only" });
 
   const personalHtml = `<ul>
         <li><strong>Denise Bodman / Bosque at Waterline</strong> asked Aug 14 whether you and Larry have a move timeline, and attached the two quotes. Unanswered, 2 days.</li>
@@ -1005,12 +1093,12 @@ function todayView() {
         <li>Prescription and glasses, about 34 days.</li>
       </ul>`;
 
-  return hudsonConnectCard("needed")
-    + card("Top 3", rows + carryNote, { wide: true, right: "Three. Not thirty." })
-    + card("Quick checks", quick)
-    + card("Waiting on", waitRows + hudsonAct("today-wait", "Waiting on", waitRows))
-    + bizNudge
-    + card("Personal, low stakes", personalHtml + hudsonAct("today-personal", "Personal, low stakes", personalHtml));
+  return `<div class="stage">${card("Top 3", rows + carryNote, { wide: true, cls: "focus", kicker: "Today", right: "Three. Not thirty." })}</div>`
+    + `<div class="after">${card("Quick checks", quick, { cls: "quiet" })}
+    ${card("Waiting on", waitRows + hudsonAct("today-wait", "Waiting on", waitRows), { cls: "quiet" })}
+    ${bizNudge}
+    ${card("Personal, low stakes", personalHtml + hudsonAct("today-personal", "Personal, low stakes", personalHtml), { cls: "quiet" })}</div>`
+    + utilityBlock(hudsonConnectCard("needed"));
 }
 
 /* ---------------- PERSONAL: BRAIN DUMP ---------------- */
@@ -1048,7 +1136,7 @@ function dumpView() {
       </div>`).join(""), { wide: true, right: "you do not have to go looking" })
     : "";
 
-  return card("Brain dump", box + chips + rows, { wide: true, right: `${open.length} open` }) + resurfCard;
+  return `<div class="after">${card("Brain dump", box + chips + rows, { wide: true, right: `${open.length} open` })}${resurfCard}</div>`;
 }
 
 /* ---------------- PERSONAL: WHERE IS IT ---------------- */
@@ -1066,7 +1154,7 @@ function findView() {
     ? hits.map(t => `<div class="item"><div class="txt"><strong>${t.what}</strong><span class="sub">${t.where}</span></div>
         <button class="bkt b-sort" data-del="${t.id}">remove</button></div>`).join("")
     : `<div class="zero">${things.length ? "Nothing matches that." : "Nothing logged yet.<br>Add the passport, the fire safe, the spare key. Future you will be grateful."}</div>`;
-  return card("Where is it", search + form + rows, { wide: true, right: `${things.length} logged` });
+  return `<div class="after">${card("Where is it", search + form + rows, { wide: true, right: `${things.length} logged` })}</div>`;
 }
 
 /* ---------- PERSONAL: 6G ---------- */
@@ -1131,7 +1219,7 @@ function sixGView() {
     </div>`;
   const home = card("Home",
     homeHtml + hudsonAct("sixg-home", "Home", "Residences at 6G / Unit 5316. October 3 is held as move-in until they change it."),
-    { wide: true });
+    { wide: true, cls: "hero" });
 
   const weekRows = week.length
     ? week.map(e => `<div class="weekrow">
@@ -1143,7 +1231,7 @@ function sixGView() {
   const weekBody = weekRows + `<div class="note">Dated building events only, a week out. Sunday brunch is standing.</div>`;
   const weekCard = card("This week at 6G",
     weekBody + hudsonAct("sixg-week", "This week at 6G", weekBody),
-    { wide: true, right: week.length ? `${week.length} this week` : "clear" });
+    { wide: true, cls: "quiet", right: week.length ? `${week.length} this week` : "clear" });
 
   const lockerRows = notes.length
     ? notes.map(n => `<div class="item">
@@ -1158,9 +1246,9 @@ function sixGView() {
       <input id="lockerin" placeholder="Locker code, hold, or who it is for" autocomplete="off">
       <button id="lockerbtn">Keep</button>
     </div>` + lockerRows + hudsonAct("sixg-locker", "Packages and locker", lockerRows),
-    { wide: true, right: notes.length ? `${notes.length} held` : "" });
+    { wide: true, cls: "quiet", right: notes.length ? `${notes.length} held` : "" });
 
-  return home + weekCard + locker;
+  return `<div class="stage">${home}</div><div class="after">${weekCard}${locker}</div>`;
 }
 
 const PERSVIEWS = { today: todayView, flylady: flyladyView, dump: dumpView, findit: findView, sixg: sixGView };
@@ -1184,6 +1272,9 @@ function renderNav() {
 function renderGreet() {
   const p = nowParts();
   const word = p.hour < 12 ? "Good morning" : p.hour < 17 ? "Good afternoon" : "Good evening";
+  const navItem = NAV[mode].find(n => n.id === page) || NAV[mode][0];
+  const crumb = el("#crumb");
+  if (crumb) crumb.textContent = "Command Center / " + (mode === "business" ? "Business" : "Personal") + " / " + navItem.label;
   el("#greetline").innerHTML = `${word}, <b>Suzanne</b>`;
   el("#greetdate").textContent = p.label + (mode === "business"
     ? " · " + BIZ.stamp
