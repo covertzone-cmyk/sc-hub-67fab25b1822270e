@@ -22,7 +22,7 @@ Human assistant Carlos owns a weekly video pack (3 Reels, 2 LinkedIn, 1 comedy, 
 
 Kenneth F. is Suzanne's personal trainer, not a client. Do not flag him in client checklists or shoot workflows.
 
-Claire's Pawline business is a separate Cowork OS subfolder. Do not mix with SCP.
+Claire's Pawline business is separate from SCP. Do not mix with SCP files. See [claire-pawline.md](claire-pawline.md).
 
 ## Drive Cowork OS
 

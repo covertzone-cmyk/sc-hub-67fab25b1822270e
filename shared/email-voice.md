@@ -25,6 +25,18 @@ Never write "floating this back to the top of your inbox."
 - Apologies: My apologies that slipped through the cracks or No worries at all.
 - Offer specific dates, then: If none of these do, send me a couple of days.
 - Booking follow-ups can mention LED lighting and posing coach.
+- Weekend wording: I don't usually offer weekend appointments, then offer early-morning or later-evening weekday.
+- Reply in the original thread.
+
+Never write: I hope this finds you well; best face forward; in today's digital age; killer headshots; look no further.
+
+## Review requests
+
+Use https://g.page/r/CcstwGsbi8ffEAE/review about 3 days after the gallery. One follow-up +7 days if they were happy. Never ask twice more. Skip if the session had friction.
+
+## Template library
+
+Drive `Templates/Email Templates.md` (id `1XMwQMb7rLnEd_TqmiH8xOdn5fBCEeo7Q`). Fifteen templates listed there. Those templates use Warmly, Suzanne Covert as a signature block. Typed mail she writes still closes Suzanne. Treat Warmly Suzanne Covert as Sprout / template-block only.
 
 ## Inbox ownership
 

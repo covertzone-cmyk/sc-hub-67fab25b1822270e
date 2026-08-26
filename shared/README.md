@@ -22,9 +22,11 @@ Never send email without her explicit yes.
 | [health.md](health.md) | Clinics, insurance plan names, appointments, daily heads-up |
 | [people-and-agents.md](people-and-agents.md) | Who owns what |
 | [inbox-rules.md](inbox-rules.md) | Both inboxes, sweeps, subscriptions |
-| [business.md](business.md) | SCP studio, contact, rates, tax, deposits, tools |
+| [business.md](business.md) | SCP studio, contact, rates, brand, gear, Sprout, W-9, deposits, tools |
 | [proposals.md](proposals.md) | Custom corporate PDFs, cover emails, sample folders |
-| [email-voice.md](email-voice.md) | SC@ voice, greetings, inbox labels |
+| [workflows.md](workflows.md) | Client lifecycle only: inquiry through review and referral |
+| [email-voice.md](email-voice.md) | SC@ voice, greetings, inbox labels, templates |
 | [open-work.md](open-work.md) | Live holds and do-not-send items |
+| [claire-pawline.md](claire-pawline.md) | Claire / Pawline. Not SCP. |
 | [cowork-os.md](cowork-os.md) | Map of Drive Cowork OS. Not the source of truth |
 | [HOW-TO-POINT-OTHER-AIS.md](HOW-TO-POINT-OTHER-AIS.md) | How to point Claude, ChatGPT, and other AIs here |

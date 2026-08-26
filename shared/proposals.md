@@ -8,7 +8,7 @@ Custom corporate proposals are branded PDFs built from Google Drive folder Propo
 - Valid 30 days
 - Turnaround: 2-3 business days
 - One final image per person unless specified
-- On-site needs: 8x10 ft plus an outlet
+- On-site space (current working guidance, Drive MEMORY Aug 23): 12x12 ft minimum, 15x15 ideal, plus power and Wi-Fi, and one high-top table. Older proposal PDFs still say 8x10 ft plus an outlet. Keep 8x10 as the older PDF line until she confirms which to print.
 - Full usage rights, copyright retained
 - Sample grid: 4 images from `Headshot photos/cropped/`
 - No em dashes
@@ -74,6 +74,10 @@ Small misses on this sent email. Do not repeat them:
 - Cover was three paragraphs vs the older one-sentence rule. We now prefer this three-paragraph Route shape.
 - Headcount 9 was not in the email.
 - Subject was not rewritten. Next time start a clean subject.
+
+## Other files in Proposal Studio
+
+Proposal Studio also has Style-Range-Page and Aug 11 sample PDFs for AGI and Capital Factory. Do not treat those as a price list.
 
 ## Approval rules
 
