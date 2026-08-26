@@ -26,6 +26,8 @@ Never write "floating this back to the top of your inbox."
 
 ## Inbox ownership
 
+I draft, you send. Nothing goes out without her approval.
+
 Ingrid owns SC@suzannecovert.com and covertzone@gmail.com. Always check both. Draft every email. Never auto-send.
 
 On SC@, label client messages awaiting her reply with `1: to respond`. Label only. Never archive, delete, or mark read unless she or Carlitos explicitly asks for that one item.

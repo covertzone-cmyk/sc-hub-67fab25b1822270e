@@ -1,5 +1,9 @@
 # Health
 
+## Insurance
+
+Health insurance is BCBS of Texas Silver PPO (plan name only). Do not store member IDs here. Vision and dental are Humana. Broker is RF Insurance Masters (Paige / Ray Freer), team@rfimasters.com, (512) 807-9594. Full cards stay in Drive Cowork OS.
+
 ## Clinics
 
 - Botox at Rejuvenate Austin, 1301 W. 5th Street #100

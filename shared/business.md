@@ -19,7 +19,8 @@ Use these without asking. Sales tax is added on the invoice.
 - Deluxe / Full Session: $425 (1 image, about 1 hour). Sprout still says Deluxe. In typed mail she says Full Session. Same quality, more time and extra outfits.
 - Branding: $1,125 (3 images)
 - Additional headshot file: $175
-- Event coverage: $400/hour, 2-hour minimum (updated Aug 6, 2026)
+- Building resident (6G) discount: $50 off the session for people who live in her building
+- Event coverage: $400/hour, 2-hour minimum (updated Aug 6, 2026). Older Proposal Studio CLAUDE.md still says $275/hour. Use $400. The old $275 is retired.
 - Full Day: $3,500
 - Half Day: $2,500
 - Additional hour: $500
@@ -38,6 +39,26 @@ Retired. Never use:
 
 - $200/person on-location
 - $650 Austin location fee
+- $275/hour event coverage (Proposal Studio CLAUDE.md leftover)
+
+## Company and new-hire rates (verified Jul 2026)
+
+- Bowman & Brooke: $325 + tax (one retouched image, extra $175)
+- Paradromics: $325
+- Grant Thornton: $275
+- McKnight Title: $250
+- Liquibase: $325
+- Kirkland: $275/person
+- Closinglock and Maxwell Locke & Ritter: $0 paid by company
+- GTLaw: $325 (was mistyped DTLaw). GT contact Sofia Rodriguez, Sofia.Rodriguez@gtlaw.com, Austin marketing coordinator
+- Phantom Space: paid in full for the original team. Extra people would be $325 each but not confirmed with the client
+
+## Reviews and session guides
+
+- Google write-a-review link (post-shoot only): https://g.page/r/CcstwGsbi8ffEAE/review
+- Google read-reviews link: https://g.page/r/CcstwGsbi8ffEAE (5.0 stars, 87 reviews as of Jul 8 2026)
+- Corporate mini session guide: https://suzannecovert.com/corporate-mini-session
+- Full headshot session guide: https://suzannecovert.com/full-headshot-session
 
 ## High-volume and event jobs
 
