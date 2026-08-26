@@ -19,3 +19,11 @@
 ## Human
 
 Human assistant Carlos owns a weekly video pack (3 Reels, 2 LinkedIn, 1 comedy, 1 EA cut).
+
+Kenneth F. is Suzanne's personal trainer, not a client. Do not flag him in client checklists or shoot workflows.
+
+Claire's Pawline business is a separate Cowork OS subfolder. Do not mix with SCP.
+
+## Drive Cowork OS
+
+Drive Cowork OS is the Claude workspace (CLAUDE.md, MEMORY.md, Workflows, Knowledge Base, Templates, Proposal Studio). GitHub `shared/` is what every AI should read and write. See [cowork-os.md](cowork-os.md).
