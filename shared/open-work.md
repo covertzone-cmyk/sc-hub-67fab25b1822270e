@@ -11,7 +11,7 @@ Current as of Aug 26, 2026. Update this when something ships or is held.
 
 ## Closed or hold
 
-- Route / Natalie Berg (natalie.berg@route.com): she said quote half day $2,500. A reply already went out Aug 26 8:00 AM CT without her approval. Do not send anything else to Natalie. Do not create a Sprout lead.
+- Route / Natalie Berg (natalie.berg@route.com): SENT Aug 26, 2026, 8:00 AM CT (13:00:02 UTC) from sc@suzannecovert.com. Subject used leftover form subject. Attachment: Route_Headshot_Proposal.pdf. Also forwarded to shea@theheadshotstudiokc.com at 10:20 AM CT. She said quote half day $2,500. Cover-email style to copy lives in proposals.md. Do not send a follow-up. Do not draft day-3 or day-8 follow-ups unless she says yes. Do not create a Sprout lead.
 - Sasha Vilcek mix-up emails on SC@ Aug 24-25 are closed. Do not investigate or send.
 - No more mail to My Fit Foods.
 - Craggy Games thank-you is in covertzone drafts; wait for yes.
