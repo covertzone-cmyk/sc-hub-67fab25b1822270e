@@ -64,7 +64,7 @@ Retired. Never use:
 
 Maxwell Locke and Ritter, Kirkland, and Greenbelt Capital. Confirm with Suzanne before unusual promises or price changes.
 
-Maxwell Locke and Ritter invoices often go through Square. Deposits are not usually taken.
+Maxwell Locke and Ritter invoices often go through Square. Deposits are not usually taken. Send invoices and photo files to Katy Fangman at kfangman@mlrpc.com. Do not send them to Emily Moore (emoore@mlrpc.com, Talent & Culture). Emily requested this on Aug 26, 2026. Suzanne confirmed Aug 26, 2026. SC@ reply already sent.
 
 ## Reviews and session guides
 
