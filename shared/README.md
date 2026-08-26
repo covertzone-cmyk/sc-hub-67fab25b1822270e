@@ -1,22 +1,26 @@
-# Shared business source of truth
+# Shared source of truth
 
-This folder is the shared brain for Suzanne Covert Photography. Every AI should read these files first before drafting a proposal, quote, or client email.
+This folder is the shared brain for Suzanne Covert. Everything durable belongs here: business, personal, home, family, inbox, calendar, money, health, travel, people, decisions, open work.
 
-Write durable updates here: new rates, new proposal rules, and closed jobs. Do not treat an old PDF as a price list.
+Every AI reads `shared/` first and writes updates back here. Do not keep a private notes file only you can see.
 
 ## Ownership
 
-- Covert Command Center owns this repo.
-- Ingrid owns inboxes.
+- Covert Command Center owns the repo.
 - Carlitos coordinates.
 
-Never send client email without Suzanne's explicit yes.
+Never send email without her explicit yes.
 
 ## What to read first
 
 | File | Use it for |
 | --- | --- |
-| [business.md](business.md) | Studio, contact, rates, tax, deposits, tools |
+| [life.md](life.md) | Family, hours, style, household |
+| [home.md](home.md) | 6G units, neighbors, move, packages |
+| [health.md](health.md) | Clinics, appointments, daily heads-up |
+| [people-and-agents.md](people-and-agents.md) | Who owns what |
+| [inbox-rules.md](inbox-rules.md) | Both inboxes, sweeps, subscriptions |
+| [business.md](business.md) | SCP studio, contact, rates, tax, deposits, tools |
 | [proposals.md](proposals.md) | Custom corporate PDFs, cover emails, sample folders |
 | [email-voice.md](email-voice.md) | SC@ voice, greetings, inbox labels |
 | [open-work.md](open-work.md) | Live holds and do-not-send items |
