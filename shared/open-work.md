@@ -2,6 +2,8 @@
 
 Current as of Aug 26, 2026. Update this when something ships or is held.
 
+Maxwell Locke and Ritter invoices and photo files go to Katy Fangman at kfangman@mlrpc.com only. Do not send them to Emily Moore. See business.md VIP extra-care.
+
 ## Do not send until she says yes
 
 - Stephanie Albury 6G follow-up: no head count; lock in a date whenever they have one that works; I can come to 6G. Last inbound Aug 20 added Micky Flick (mflick@kairoi.com).
