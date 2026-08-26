@@ -21,6 +21,7 @@ Use these without asking. Sales tax is added on the invoice.
 - Additional headshot file: $175
 - Building resident (6G) discount: $50 off the session for people who live in her building
 - Event coverage: $400/hour, 2-hour minimum (updated Aug 6, 2026). Older Proposal Studio CLAUDE.md still says $275/hour. Use $400. The old $275 is retired.
+- Extra headshot-booth hour: $500 on top of a package already quoted. This is not the event hourly rate.
 - Full Day: $3,500
 - Half Day: $2,500
 - Additional hour: $500
@@ -40,6 +41,7 @@ Retired. Never use:
 - $200/person on-location
 - $650 Austin location fee
 - $275/hour event coverage (Proposal Studio CLAUDE.md leftover)
+- $350/hour event coverage (not current)
 
 ## Company and new-hire rates (verified Jul 2026)
 
